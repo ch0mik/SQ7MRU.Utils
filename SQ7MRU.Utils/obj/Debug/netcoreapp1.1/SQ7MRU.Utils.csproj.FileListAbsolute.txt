@@ -1,6 +1,0 @@
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\bin\Debug\netcoreapp1.1\SQ7MRU.Utils.deps.json
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\obj\Debug\netcoreapp1.1\SQ7MRU.Utils.AssemblyInfo.cs
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\bin\Debug\netcoreapp1.1\SQ7MRU.Utils.dll
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\bin\Debug\netcoreapp1.1\SQ7MRU.Utils.pdb
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\obj\Debug\netcoreapp1.1\SQ7MRU.Utils.dll
-C:\Users\ch0mik\OneDrive\GitHub\SQ7MRU.Utils\SQ7MRU.Utils\obj\Debug\netcoreapp1.1\SQ7MRU.Utils.pdb
