@@ -11,3 +11,5 @@ private static void Main(string[] args)
     d.DownloadJPGs(); //Download e-QSLs 
    }
 ```
+
+[older project]( https://eqsldownloader.codeplex.com/)
