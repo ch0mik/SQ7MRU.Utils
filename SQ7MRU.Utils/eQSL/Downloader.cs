@@ -13,8 +13,7 @@ namespace SQ7MRU.Utils
 {
     public class Downloader : HttpClient
     {
-        private readonly CookieContainer container = new CookieContainer();
-
+        private readonly CookieContainer container;
         private string callsign, password, path;
         private int concurentDownloads;
         private ConcurrentDictionary<string, string> adifFiles = new ConcurrentDictionary<string, string>();
