@@ -11,7 +11,7 @@ private static void Main(string[] args)
     d.GetAdifs(); //Downloads ADIF for Yours Account(s)
     d.DownloadJPGs(); //Download e-QSLs 
 	
-	//Downloads iQSLs from hrdlog.net
+    //Downloads iQSLs from hrdlog.net
     var hrd = new iQSL("sq7mru");
     hrd.Download();
    }
