@@ -22,7 +22,6 @@ namespace SQ7MRU.Utils
         private readonly string patternAlphaNumeric = "[^a-zA-ZæÆøØåÅéÉöÖäÄüÜ-ñÑõÕéÉáÁóÓôÔzżźćńółęąśŻŹĆĄŚĘŁÓŃ _]";
         private readonly Uri baseAddress = new Uri("http://eqsl.cc/qslcard/");
         private List<CallAndQTH> callAndQTHList;
-        private ConcurrentDictionary<CallAndQTH, List<string>> urlsFromAdifs;
         public ILogger logger;
         public List<CallAndQTH> CallSigns { get { return callAndQTHList; } }
         public CookieContainer Cookies { get { return container; } }
@@ -32,7 +31,6 @@ namespace SQ7MRU.Utils
             this.concurentDownloads = concurentDownloads;
             this.container = new CookieContainer();
             this.callAndQTHList = new List<CallAndQTH>();
-            this.urlsFromAdifs = new ConcurrentDictionary<CallAndQTH, List<string>>();
             this.callsign = callsign;
             this.password = password;
 
@@ -66,7 +64,7 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private async System.Threading.Tasks.Task LogonAsync()
+        private async Task LogonAsync()
         {
             string action = "LoginFinish.cfm";
             using (var handler = new HttpClientHandler() { CookieContainer = this.container })
@@ -228,30 +226,35 @@ namespace SQ7MRU.Utils
 
         public void DownloadJPGs()
         {
-            Parallel.ForEach(callAndQTHList, callQth =>
-            {
-                logger.LogInformation($"Generating Urls from ADIF for CallSign {callQth.CallSign}");
-                urlsFromAdifs.TryAdd(callQth, GetUrlsFromAdif(callQth));
-                logger.LogInformation($"Generated {urlsFromAdifs[callQth].Count} Urls for CallSign {callQth.CallSign}");
-            });
-
             foreach (CallAndQTH callQth in callAndQTHList)
             {
                 string callsignSubDir = Path.Combine(this.path, callQth.CallSign.Replace("/", "_"));
                 if (!Directory.Exists(callsignSubDir)) { Directory.CreateDirectory(callsignSubDir); }
 
-                logger.LogInformation($"Start downloads {urlsFromAdifs[callQth].Count} e-QSLs for CallSign {callQth.CallSign}");
+                using (AdifReader ar = new AdifReader(adifFiles[callQth.CallSign]))
+                {
+                    Parallel.ForEach(ar.GetAdifRows().ToArray(), qso =>
+                    {
+                        callQth.QSOs.TryAdd(qso, null);
+                    });
+                }
+
+                logger.LogInformation($"Start downloads {callQth.QSOs.Count} e-QSLs for CallSign {callQth.CallSign}");
+
+#if DEBUG
+                Console.WriteLine($"Start downloads {callQth.QSOs.Count} e-QSLs for CallSign {callQth.CallSign}");
+#endif
 
                 Logon(callQth.CallSign, callQth.HamID);
-
-                Console.WriteLine($"Start downloads {urlsFromAdifs[callQth].Count} e-QSLs for CallSign {callQth.CallSign}");
 
                 using (var handler = new HttpClientHandler() { CookieContainer = this.container })
                 using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
                 {
-                    Parallel.ForEach(urlsFromAdifs[callQth], new ParallelOptions() { MaxDegreeOfParallelism = 100 }, async action =>
+                    Parallel.ForEach(callQth.QSOs, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, async qso =>
                     {
+                        string action = GetUrlFromQSO(qso.Key, callQth);
                         var file = FilenameFromURL(action);
+                        callQth.QSOs[qso.Key] = file;
                         if (!File.Exists(Path.Combine(callsignSubDir, file)))
                         {
                             try
@@ -274,7 +277,7 @@ namespace SQ7MRU.Utils
                                 logger.LogError($"Error during download {file} for CallSign {callQth.CallSign}; WebException : {exc.Message}");
 #if DEBUG
                                 Console.WriteLine($"Save eQSL {file}  for CallSign {callQth.CallSign}");
-#endif 
+#endif
                             }
                             catch (Exception exc)
                             {
@@ -295,12 +298,11 @@ namespace SQ7MRU.Utils
             }
         }
 
-
         public string FilenameFromURL(string URL)
         {
             Dictionary<string, string> dic = UrlHelper.Decode(URL).Replace($"DisplayeQSL.cfm?", "").Split(
                                            new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(s => s.Split('=')[0].ToLower(), s => s.Split('=')[1].ToUpper());
-            return  $"{dic["qsodate"].Replace(":00.0", "").Replace(":", "").Replace(" ", "").Replace("-", "")}_{dic["callsign"].Replace("/", "-")}_{dic["band"]}_{dic["mode"]}.JPG";
+            return $"{dic["qsodate"].Replace(":00.0", "").Replace(":", "").Replace(" ", "").Replace("-", "")}_{dic["callsign"].Replace("/", "-")}_{dic["band"]}_{dic["mode"]}.JPG";
         }
 
         private List<string> GetUrlsFromAdif(CallAndQTH c)
@@ -313,9 +315,7 @@ namespace SQ7MRU.Utils
                 {
                     try
                     {
-                        Urls.Add($"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
-                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.band}&Mode={r.mode}");
+                        Urls.Add(GetUrlFromQSO(r, c));
                     }
                     catch (Exception exc)
                     {
@@ -324,6 +324,21 @@ namespace SQ7MRU.Utils
                 }
 
                 return Urls;
+            }
+        }
+
+        private string GetUrlFromQSO(AdifRow r, CallAndQTH c)
+        {
+            try
+            {
+                return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
+                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
+                                 $"&Band={r.band}&Mode={r.mode}";
+            }
+            catch (Exception exc)
+            {
+                logger.LogCritical(exc.Message);
+                return null;
             }
         }
 
