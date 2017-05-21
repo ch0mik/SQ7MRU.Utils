@@ -12,7 +12,7 @@ private static void Main(string[] args)
     d.DownloadJPGs(); //Download e-QSLs 
 	
 	//Downloads iQSLs from hrdlog.net
-	var hrd = new iQSL("sq7mru");
+    var hrd = new iQSL("sq7mru");
     hrd.Download();
    }
 ```
