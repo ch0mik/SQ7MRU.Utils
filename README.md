@@ -7,9 +7,8 @@ simple to use
 private static void Main(string[] args)
    {
     //Downloads Yours eQSL from eQSL.cc
-    var d = new Downloader("YoursLoginTo_eQSL.cc", "password");
-    d.GetAdifs(); //Downloads ADIF for Yours Account(s)
-    d.DownloadJPGs(); //Download e-QSLs 
+    var eqsl = new Downloader("YoursLoginTo_eQSL.cc", "password");
+    eqsl.Download(); //Download ADIFs and e-QSLs 
 	
     //Downloads iQSLs from hrdlog.net
     var hrd = new iQSL("sq7mru");
