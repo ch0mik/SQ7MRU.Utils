@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,44 +10,50 @@ using System.Threading.Tasks;
 
 namespace SQ7MRU.Utils
 {
+    /// <summary>
+    /// eQSL downloader from eqsl.cc
+    /// </summary>
     public class Downloader : HttpClient
     {
         private readonly CookieContainer container;
         private string callsign, password, path;
         private int concurentDownloads;
-        private ConcurrentDictionary<string, string> adifFiles = new ConcurrentDictionary<string, string>();
-        private ILoggerFactory loggerFactory = new LoggerFactory();
         private readonly string patternAlphaNumeric = "[^a-zA-ZæÆøØåÅéÉöÖäÄüÜ-ñÑõÕéÉáÁóÓôÔzżźćńółęąśŻŹĆĄŚĘŁÓŃ _]";
         private readonly Uri baseAddress = new Uri("http://eqsl.cc/qslcard/");
         private List<CallAndQTH> callAndQTHList;
-        public ILogger logger;
+        private ILoggerFactory _loggerFactory;
+        private ILogger logger;
         public List<CallAndQTH> CallSigns { get { return callAndQTHList; } }
-        public CookieContainer Cookies { get { return container; } }
 
-        public Downloader(string callsign, string password, LogLevel logLevel = LogLevel.Error, string path = null, int concurentDownloads = 10)
+
+        /// <summary>
+        /// Initialize class Downloader, logon to eQSL.cc and get CallSign/QTH for this login
+        /// </summary>
+        /// <param name="callsign"></param>
+        /// <param name="password"></param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="path"></param>
+        /// <param name="concurentDownloads"></param>
+        public Downloader(string callsign, string password, ILoggerFactory loggerFactory = null, string path = null, int concurentDownloads = 10)
         {
             this.concurentDownloads = concurentDownloads;
             this.container = new CookieContainer();
             this.callAndQTHList = new List<CallAndQTH>();
             this.callsign = callsign;
             this.password = password;
-
-            if (string.IsNullOrEmpty(path))
-            {
-                this.path = Directory.GetCurrentDirectory();
-            }
-            else
-            {
-                this.path = path;
-            }
+            this._loggerFactory = loggerFactory;
 
             try
             {
-                logger = loggerFactory.CreateLogger<Downloader>();
-#if DEBUG
-                logger.IsEnabled(LogLevel.Trace);
-#endif
+                if (string.IsNullOrEmpty(path))
+                { this.path = Directory.GetCurrentDirectory(); }
+                else
+                { this.path = path; }
 
+                if (loggerFactory == null)
+                { this._loggerFactory = new LoggerFactory().AddDebug(); }
+
+                logger = _loggerFactory.CreateLogger<Downloader>();
                 logger.LogInformation("Initialize Downloader Class");
 
                 Task.Run(async () =>
@@ -99,6 +104,11 @@ namespace SQ7MRU.Utils
             }
         }
 
+        /// <summary>
+        /// Logon to eQSL.cc
+        /// </summary>
+        /// <param name="callSign"></param>
+        /// <param name="hamID"></param>
         public void Logon(string callSign, string hamID = null)
         {
             string action = "LoginFinish.cfm";
@@ -172,34 +182,22 @@ namespace SQ7MRU.Utils
             }
         }
 
-        public void GetAdifs()
-        {
-            //info : Paraller.ForEach is not got, beacouse eqsl.cc works with cookies
-            foreach (var callQth in callAndQTHList)
-            {
-                Task.Run(async () =>
-                {
-                    logger.LogTrace($"Geting ADIF for CallSign {callQth.CallSign}");
-                    Logon(callQth.CallSign, callQth.HamID);
-                    await GetSingleAdifAsync(callQth);
-                    logger.LogTrace($"ADIF for CallSign {callQth.CallSign} was saved in '{adifFiles[callQth.CallSign]}' file");
-                }).GetAwaiter().GetResult();
-            }
-        }
-
+        /// <summary>
+        /// Download ADIF for CallSign
+        /// </summary>
+        /// <param name="callQth"></param>
         public void GetSingleAdif(CallAndQTH callQth)
         {
             Task.Run(async () =>
             {
-                logger.LogInformation($"Geting ADIF for CallSign {callQth.CallSign}");
                 Logon(callQth.CallSign, callQth.HamID);
                 await GetSingleAdifAsync(callQth);
-                logger.LogInformation($"ADIF for CallSign {callQth.CallSign} was saved in '{adifFiles[callQth.CallSign]}' file");
             }).GetAwaiter().GetResult();
         }
 
         private async Task GetSingleAdifAsync(CallAndQTH callQth)
         {
+            logger.LogTrace($"Geting ADIF for CallSign {callQth.CallSign}");
             Logon(callQth.CallSign, callQth.HamID);
             string action = $"DownloadInBox.cfm?UserName={callQth.CallSign}&Password={this.password}";
             using (var handler = new HttpClientHandler() { CookieContainer = this.container })
@@ -219,18 +217,21 @@ namespace SQ7MRU.Utils
                 result.EnsureSuccessStatusCode();
                 var adif = await result.Content.ReadAsStringAsync();
                 File.WriteAllText(adifFile, adif);
-                adifFiles.TryAdd(callQth.CallSign, adifFile);
+                callQth.Adif = adifFile;
+                logger.LogInformation($"ADIF for CallSign {callQth.CallSign} was saved in '{callQth.Adif}' file");
             }
         }
 
-        public void DownloadJPGs()
+        /// <summary>
+        /// Downloads the ADIF file and eQSL for CallSign
+        /// </summary>
+        public void Download()
         {
             foreach (CallAndQTH callQth in callAndQTHList)
             {
-                string callsignSubDir = Path.Combine(this.path, callQth.CallSign.Replace("/", "_"));
-                if (!Directory.Exists(callsignSubDir)) { Directory.CreateDirectory(callsignSubDir); }
+                GetSingleAdif(callQth);
 
-                using (AdifReader ar = new AdifReader(adifFiles[callQth.CallSign]))
+                using (AdifReader ar = new AdifReader(callQth.Adif))
                 {
                     Parallel.ForEach(ar.GetAdifRows().ToArray(), qso =>
                     {
@@ -238,11 +239,10 @@ namespace SQ7MRU.Utils
                     });
                 }
 
-                logger.LogInformation($"Start downloads {callQth.QSOs.Count} e-QSLs for CallSign {callQth.CallSign}");
+                string callsignSubDir = Path.Combine(this.path, callQth.CallSign.Replace("/", "_"));
+                if (!Directory.Exists(callsignSubDir)) { Directory.CreateDirectory(callsignSubDir); }
 
-#if DEBUG
-                Console.WriteLine($"Start downloads {callQth.QSOs.Count} e-QSLs for CallSign {callQth.CallSign}");
-#endif
+                logger.LogInformation($"Start downloads {callQth.QSOs.Count} e-QSLs for CallSign {callQth.CallSign}");
 
                 Logon(callQth.CallSign, callQth.HamID);
 
@@ -254,7 +254,7 @@ namespace SQ7MRU.Utils
                         string action = GetUrlFromQSO(qso.Key, callQth);
                         var file = FilenameFromURL(action);
                         callQth.QSOs[qso.Key] = file;
-                        if (!File.Exists(Path.Combine(callsignSubDir, file)))
+                        if (!File.Exists(Path.Combine(callsignSubDir, file)) || new FileInfo(Path.Combine(callsignSubDir, file)).Length == 0)
                         {
                             try
                             {
@@ -267,16 +267,10 @@ namespace SQ7MRU.Utils
                                 var jpg = await result.Content.ReadAsByteArrayAsync();
                                 File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
                                 logger.LogTrace($"Save eQSL {file}  for CallSign {callQth.CallSign}");
-#if DEBUG
-                                Console.WriteLine($"Save eQSL {file}  for CallSign {callQth.CallSign}");
-#endif
                             }
                             catch (WebException exc)
                             {
                                 logger.LogError($"Error during download {file} for CallSign {callQth.CallSign}; WebException : {exc.Message}");
-#if DEBUG
-                                Console.WriteLine($"Save eQSL {file}  for CallSign {callQth.CallSign}");
-#endif
                             }
                             catch (Exception exc)
                             {
@@ -286,18 +280,14 @@ namespace SQ7MRU.Utils
                         else
                         {
                             logger.LogTrace($"Skipped eQSL {file}  for CallSign {callQth.CallSign}");
-#if DEBUG
-                            Console.WriteLine($"Skipped eQSL {file}  for CallSign {callQth.CallSign}");
-#endif
                         }
                     });
                 }
-
                 logger.LogInformation($"Finished download e-QSLs for CallSign {callQth.CallSign}");
             }
         }
 
-        public string FilenameFromURL(string URL)
+        private string FilenameFromURL(string URL)
         {
             Dictionary<string, string> dic = UrlHelper.Decode(URL).Replace($"DisplayeQSL.cfm?", "").Split(
                                            new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(s => s.Split('=')[0].ToLower(), s => s.Split('=')[1].ToUpper());
@@ -306,7 +296,7 @@ namespace SQ7MRU.Utils
 
         private List<string> GetUrlsFromAdif(CallAndQTH c)
         {
-            using (AdifReader ar = new AdifReader(adifFiles[c.CallSign]))
+            using (AdifReader ar = new AdifReader(c.Adif))
             {
                 List<string> Urls = new List<string>();
                 List<AdifRow> rows = ar.GetAdifRows();

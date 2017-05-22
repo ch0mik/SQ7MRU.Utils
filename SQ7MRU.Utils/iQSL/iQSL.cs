@@ -19,31 +19,48 @@ namespace SQ7MRU.Utils
         private readonly CookieContainer container;
         private string path, callsign, subfolder;
         private int concurentDownloads;
-        public ILogger logger;
+        private ILoggerFactory _loggerFactory;
+        private ILogger logger;
         public CookieContainer Cookies { get { return container; } }
 
-        public iQSL(string callsign, LogLevel logLevel = LogLevel.Error, string path = null, string subfolder = "iQSL_HRDLOG", int concurentDownloads = 10)
+        /// <summary>
+        /// Initialize class iQSL
+        /// </summary>
+        /// <param name="callsign"></param>
+        /// <param name="loggerFactory"></param>
+        /// <param name="path"></param>
+        /// <param name="subfolder"></param>
+        /// <param name="concurentDownloads"></param>
+        public iQSL(string callsign, ILoggerFactory loggerFactory = null, string path = null, string subfolder = "iQSL_HRDLOG", int concurentDownloads = 10)
         {
             this.concurentDownloads = concurentDownloads;
             this.container = new CookieContainer();
             this.callsign = callsign;
             this.subfolder = subfolder;
+            this._loggerFactory = loggerFactory;
 
             if (string.IsNullOrEmpty(path))
-            {
-                this.path = Directory.GetCurrentDirectory();
-            }
+            { this.path = Directory.GetCurrentDirectory(); }
             else
-            {
-                this.path = path;
-            }
+            { this.path = path; }
+
+            if (loggerFactory == null)
+            { this._loggerFactory = new LoggerFactory().AddDebug(); }
+
+            logger = _loggerFactory.CreateLogger<iQSL>();
+            logger.LogInformation("Initialize iQSL Class");
+
         }
 
+        /// <summary>
+        /// Downloads the iQSL from hrdlog.net
+        /// </summary>
         public void Download()
         {
             Task.Run(async () =>
             {
                 var Urls = await GetUrlsAsync();
+                logger.LogInformation($"{Urls.Count} iQSLs");
                 Parallel.ForEach(Urls, async url =>
                  {
                      await GetJPGfromURLAsync(url);
@@ -94,22 +111,28 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private async Task GetJPGfromURLAsync(string Url)
+        private async Task GetJPGfromURLAsync(string url)
         {
             if(!Directory.Exists(Path.Combine(path, subfolder))) { Directory.CreateDirectory(Path.Combine(path, subfolder)); }
 
-            string pathfile = Path.Combine(path, subfolder, Url.ToLower().Replace("qsl.aspx?id=", "") + ".JPG");
+            string filename = url.ToLower().Replace("qsl.aspx?id=", "") + ".JPG";
+            string pathfile = Path.Combine(path, subfolder, filename);
 
             if (!File.Exists(pathfile) || new FileInfo(pathfile).Length == 0)
             {
                 using (var handler = new HttpClientHandler() { CookieContainer = this.container })
                 using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
                 {
-                    var result = client.GetAsync(Url).Result;
+                    var result = client.GetAsync(url).Result;
                     result.EnsureSuccessStatusCode();
                     var jpg = await result.Content.ReadAsByteArrayAsync();
                     File.WriteAllBytes(pathfile, jpg);
+                    logger.LogInformation($"Save the {filename}");
                 };
+            }
+            else
+            {
+                logger.LogTrace($"Skip the {filename}");
             }
         }
 
