@@ -45,13 +45,13 @@ namespace SQ7MRU.Utils
                         i++;
                     }
 
-                    PropertyInfo[] props = AdifRow.GetType().GetProperties();
+                    var props = typeof(AdifRow).GetRuntimeProperties();
 
                     foreach (PropertyInfo prp in props)
                     {
                         if (dic.ContainsKey(prp.Name.ToLower()))
                         {
-                            PropertyInfo pi = typeof(AdifRow).GetProperty(prp.Name);
+                            PropertyInfo pi = typeof(AdifRow).GetRuntimeProperty(prp.Name);
                             pi.SetValue(AdifRow, dic[prp.Name.ToLower()], null);
                         }
                     }

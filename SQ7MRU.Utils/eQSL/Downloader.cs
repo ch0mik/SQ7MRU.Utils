@@ -268,10 +268,6 @@ namespace SQ7MRU.Utils
                                 File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
                                 logger.LogTrace($"Save eQSL {file}  for CallSign {callQth.CallSign}");
                             }
-                            catch (WebException exc)
-                            {
-                                logger.LogError($"Error during download {file} for CallSign {callQth.CallSign}; WebException : {exc.Message}");
-                            }
                             catch (Exception exc)
                             {
                                 logger.LogCritical($"Error during download {file} for CallSign {callQth.CallSign}; Exception : {exc.Message}");
