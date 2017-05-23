@@ -1,7 +1,7 @@
 # SQ7MRU.Utils
 Utils to parse ADIF files and downloads the eQSLs
 
-Nuget [SQ7MRU.Utils]{https://www.nuget.org/packages/SQ7MRU.Utils}
+Nuget : [SQ7MRU.Utils](https://www.nuget.org/packages/SQ7MRU.Utils)
 
 simple to use 
 
