@@ -51,7 +51,7 @@ namespace SQ7MRU.Utils
                 { this.path = path; }
 
                 if (loggerFactory == null)
-                { this._loggerFactory = new LoggerFactory().AddDebug(); }
+                { this._loggerFactory = new LoggerFactory(); }
 
                 logger = _loggerFactory.CreateLogger<Downloader>();
                 logger.LogInformation("Initialize Downloader Class");
