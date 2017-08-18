@@ -258,11 +258,6 @@ namespace SQ7MRU.Utils
                         var file = FilenameFromURL(action);
                         callQth.QSOs[qso.Key] = file;
 
-                        if(qso.Key.call == "GM1BSG" || qso.Key.call == "IS0DCR")
-                        {
-                                Console.WriteLine(action);
-                        }
-
                         //downloading eQSL if not exist on disk
                         if (!File.Exists(Path.Combine(callsignSubDir, file)) || new FileInfo(Path.Combine(callsignSubDir, file)).Length == 0)
                         {
