@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>netcoreapp1.1;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;netstandard1.3;net46;net452</TargetFrameworks>
     <OutputTypeEx>library</OutputTypeEx>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc or hrdlog.net</Description>
