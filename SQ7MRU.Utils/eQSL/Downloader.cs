@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace SQ7MRU.Utils
 {
@@ -17,7 +19,7 @@ namespace SQ7MRU.Utils
     {
         private readonly CookieContainer container;
         private string callsign, password, path;
-        private int concurentDownloads;
+        private int concurentDownloads, sleepTime;
         private readonly string patternAlphaNumeric = "[^a-zA-ZæÆøØåÅéÉöÖäÄüÜ-ñÑõÕéÉáÁóÓôÔzżźćńółęąśŻŹĆĄŚĘŁÓŃ _]";
         private readonly Uri baseAddress = new Uri("http://eqsl.cc/qslcard/");
         private List<CallAndQTH> callAndQTHList;
@@ -34,9 +36,10 @@ namespace SQ7MRU.Utils
         /// <param name="loggerFactory"></param>
         /// <param name="path"></param>
         /// <param name="concurentDownloads"></param>
-        public Downloader(string callsign, string password, ILoggerFactory loggerFactory = null, string path = null, int concurentDownloads = 10)
+        public Downloader(string callsign, string password, ILoggerFactory loggerFactory = null, string path = null, int concurentDownloads = 10, int sleepTime = 100)
         {
             this.concurentDownloads = concurentDownloads;
+            this.sleepTime = sleepTime;
             this.container = new CookieContainer();
             this.callAndQTHList = new List<CallAndQTH>();
             this.callsign = callsign;
@@ -249,24 +252,51 @@ namespace SQ7MRU.Utils
                 using (var handler = new HttpClientHandler() { CookieContainer = this.container })
                 using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
                 {
-                    Parallel.ForEach(callQth.QSOs, new ParallelOptions() { MaxDegreeOfParallelism = 100 }, async qso =>
+                    Parallel.ForEach(callQth.QSOs, new ParallelOptions() { MaxDegreeOfParallelism = concurentDownloads }, async qso =>
                     {
                         string action = GetUrlFromQSO(qso.Key, callQth);
                         var file = FilenameFromURL(action);
                         callQth.QSOs[qso.Key] = file;
+
+                        if(qso.Key.call == "GM1BSG" || qso.Key.call == "IS0DCR")
+                        {
+                                Console.WriteLine(action);
+                        }
+
+                        //downloading eQSL if not exist on disk
                         if (!File.Exists(Path.Combine(callsignSubDir, file)) || new FileInfo(Path.Combine(callsignSubDir, file)).Length == 0)
                         {
                             try
                             {
+                                bool slowDown= true;
+                                int _sleepTime = 0;
+                                while(slowDown)
+                                {
                                 var result = client.GetAsync(action).Result;
                                 result.EnsureSuccessStatusCode();
                                 var response = await result.Content.ReadAsStringAsync();
-                                action = $"http://eqsl.cc{Regex.Match(response, @"((\/CFFileServlet\/_cf_image\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString()}";
-                                result = client.GetAsync(action).Result;
-                                result.EnsureSuccessStatusCode();
-                                var jpg = await result.Content.ReadAsByteArrayAsync();
-                                File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
-                                logger.LogTrace($"Save eQSL {file}  for CallSign {callQth.CallSign}");
+
+                                if((!response.Contains("ERROR - Too many queries overloading the system. Slow down!")) && (result.StatusCode.ToString() == "OK"))
+                                    {
+                                     
+                                    action = $"http://eqsl.cc{Regex.Match(response, @"((\/CFFileServlet\/_cf_image\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString()}";
+                                    result = client.GetAsync(action).Result;
+                                    result.EnsureSuccessStatusCode();
+                                    var jpg = await result.Content.ReadAsByteArrayAsync();
+                                        
+                                        if(!Encoding.UTF8.GetString(jpg).Contains("HTML"))
+                                            {
+                                            File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
+                                            logger.LogTrace($"Save eQSL {file}  for CallSign {callQth.CallSign}");
+                                            slowDown = false;   
+                                            }
+                                    }
+                                    else
+                                    {
+                                        Thread.Sleep(_sleepTime +=sleepTime);  //prevent for  "ERROR - Too many queries overloading the system. Slow down!"
+                                        if(_sleepTime > 60000 ) { _sleepTime = 0;}     
+                                    }
+                                }
                             }
                             catch (Exception exc)
                             {
@@ -318,7 +348,7 @@ namespace SQ7MRU.Utils
             {
                 return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
                                  $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.band}&Mode={r.mode}";
+                                 $"&Band={r.band}&Mode={r.submode}";
             }
             catch (Exception exc)
             {
