@@ -8,7 +8,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Threading;
 
 namespace SQ7MRU.Utils
 {
@@ -288,7 +287,7 @@ namespace SQ7MRU.Utils
                                     }
                                     else
                                     {
-                                        Thread.Sleep(_sleepTime +=sleepTime);  //prevent for  "ERROR - Too many queries overloading the system. Slow down!"
+                                        System.Threading.Thread.Sleep(_sleepTime +=sleepTime);  //prevent for  "ERROR - Too many queries overloading the system. Slow down!"
                                         if(_sleepTime > 60000 ) { _sleepTime = 0;}     
                                     }
                                 }
