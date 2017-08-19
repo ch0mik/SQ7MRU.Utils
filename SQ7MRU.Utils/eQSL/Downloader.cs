@@ -19,7 +19,7 @@ namespace SQ7MRU.Utils
     {
         private readonly CookieContainer container;
         private string callsign, password, path;
-        private int concurentDownloads, sleepTime;
+        private int concurentDownloads, sleepTime, maxRetry;
         private readonly string patternAlphaNumeric = "[^a-zA-ZæÆøØåÅéÉöÖäÄüÜ-ñÑõÕéÉáÁóÓôÔzżźćńółęąśŻŹĆĄŚĘŁÓŃ _]";
         private readonly Uri baseAddress = new Uri("http://eqsl.cc/qslcard/");
         private List<CallAndQTH> callAndQTHList;
@@ -36,10 +36,12 @@ namespace SQ7MRU.Utils
         /// <param name="loggerFactory"></param>
         /// <param name="path"></param>
         /// <param name="concurentDownloads"></param>
-        public Downloader(string callsign, string password, ILoggerFactory loggerFactory = null, string path = null, int concurentDownloads = 10, int sleepTime = 100)
+        public Downloader(string callsign, string password, ILoggerFactory loggerFactory = null, 
+        string path = null, int concurentDownloads = 10, int sleepTime = 100, int maxRetry = 100)
         {
             this.concurentDownloads = concurentDownloads;
             this.sleepTime = sleepTime;
+            this.maxRetry = maxRetry;
             this.container = new CookieContainer();
             this.callAndQTHList = new List<CallAndQTH>();
             this.callsign = callsign;
@@ -265,8 +267,22 @@ namespace SQ7MRU.Utils
                             {
                                 bool slowDown= true;
                                 int _sleepTime = 0;
-                                while(slowDown)
+                                int retry = 0;
+                                while(retry < maxRetry || slowDown)
                                 {
+                                retry +=1; 
+                                if(retry > 1) 
+                                    {
+                                        logger.LogTrace($"Retry {retry} for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}");   
+                                    }
+                                
+                                if(retry == maxRetry)
+                                    {
+                                        logger.LogWarning($"Abort downloading eQSL for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}, maxRetry {retry}");   
+                                        slowDown = false;
+                                        break;
+                                    }
+
                                 var result = client.GetAsync(action).Result;
                                 result.EnsureSuccessStatusCode();
                                 var response = await result.Content.ReadAsStringAsync();
@@ -279,26 +295,43 @@ namespace SQ7MRU.Utils
                                     result.EnsureSuccessStatusCode();
                                     response = await result.Content.ReadAsStringAsync();
                                 }
-                                
-                                if((!response.Contains("ERROR - Too many queries overloading the system. Slow down!")) && (result.StatusCode.ToString() == "OK"))
+
+                                if(response.Contains("There is no entry for a QSO"))
+                                {
+                                     logger.LogWarning($"No confirm eQSL for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}");
+                                     slowDown = false; 
+                                     break;
+                                }
+
+                                if(File.Exists(Path.Combine(callsignSubDir, file)))
+                                {
+                                   logger.LogTrace($"Skipped eQSL {file}  for CallSign {callQth.CallSign}");
+                                   slowDown = false; 
+                                   break;
+                                }
+                                else 
                                     {
-                                     
-                                    action = $"http://eqsl.cc{Regex.Match(response, @"((\/CFFileServlet\/_cf_image\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString()}";
-                                    result = client.GetAsync(action).Result;
-                                    result.EnsureSuccessStatusCode();
-                                    var jpg = await result.Content.ReadAsByteArrayAsync();
+                                    if((!response.Contains("ERROR - Too many queries overloading the system. Slow down!")) && (result.StatusCode.ToString() == "OK"))
+                                        {
                                         
-                                        if(!Encoding.UTF8.GetString(jpg).Contains("HTML"))
-                                            {
-                                            File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
-                                            logger.LogInformation($"Save eQSL {file}  for CallSign {callQth.CallSign}");
-                                            slowDown = false;   
-                                            }
-                                    }
-                                    else
-                                    {
-                                        Thread.Sleep(_sleepTime +=sleepTime);  //prevent for  "ERROR - Too many queries overloading the system. Slow down!"
-                                        if(_sleepTime > 60000 ) { _sleepTime = 0;}     
+                                        action = $"http://eqsl.cc{Regex.Match(response, @"((\/CFFileServlet\/_cf_image\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString()}";
+                                        result = client.GetAsync(action).Result;
+                                        result.EnsureSuccessStatusCode();
+                                        var jpg = await result.Content.ReadAsByteArrayAsync();
+                                            
+                                            if(!Encoding.UTF8.GetString(jpg).Contains("HTML"))
+                                                {
+                                                File.WriteAllBytes(Path.Combine(callsignSubDir, file), jpg);
+                                                logger.LogInformation($"Save eQSL {file}  for CallSign {callQth.CallSign}");
+                                                slowDown = false;
+                                                break;   
+                                                }
+                                        }
+                                        else
+                                        {
+                                            Thread.Sleep(_sleepTime +=sleepTime);  //prevent for  "ERROR - Too many queries overloading the system. Slow down!"
+                                            if(_sleepTime > 60000 ) { _sleepTime = 0;}     
+                                        }
                                     }
                                 }
                             }

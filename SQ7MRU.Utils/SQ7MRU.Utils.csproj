@@ -8,13 +8,13 @@
     <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc or hrdlog.net</Description>
     <Authors>Pawel Janowski SQ7MRU</Authors>
     <Company>HamRadio</Company>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/ch0mik/SQ7MRU.Utils/master/LICENSE</PackageLicenseUrl>
     <Copyright>SQ7MRU (C) 2017</Copyright>
-    <AssemblyVersion>1.0.7.0</AssemblyVersion>
-    <FileVersion>1.0.7.0</FileVersion>
+    <AssemblyVersion>1.0.8.0</AssemblyVersion>
+    <FileVersion>1.0.8.0</FileVersion>
     <RepositoryType>C#</RepositoryType>
     <PackageTags>HamRadio, eQSL, ADIF</PackageTags>
   </PropertyGroup>
