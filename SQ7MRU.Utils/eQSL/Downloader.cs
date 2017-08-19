@@ -270,7 +270,16 @@ namespace SQ7MRU.Utils
                                 var result = client.GetAsync(action).Result;
                                 result.EnsureSuccessStatusCode();
                                 var response = await result.Content.ReadAsStringAsync();
-
+                                
+                                if(response.Contains("There is no entry for a QSO"))
+                                {
+                                    action = GetUrlFromQSO(qso.Key, callQth, true);
+                                    file = FilenameFromURL(action);
+                                    result = client.GetAsync(action).Result;
+                                    result.EnsureSuccessStatusCode();
+                                    response = await result.Content.ReadAsStringAsync();
+                                }
+                                
                                 if((!response.Contains("ERROR - Too many queries overloading the system. Slow down!")) && (result.StatusCode.ToString() == "OK"))
                                     {
                                      
@@ -337,13 +346,22 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private string GetUrlFromQSO(AdifRow r, CallAndQTH c)
+        private string GetUrlFromQSO(AdifRow r, CallAndQTH c, bool old = false)
         {
             try
             {
+                if(old)
+                {
+                return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
+                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
+                                 $"&Band={r.band}&Mode={r.mode}";
+                }
+                else
+                {
                 return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
                                  $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
                                  $"&Band={r.band}&Mode={r.submode}";
+                }
             }
             catch (Exception exc)
             {
