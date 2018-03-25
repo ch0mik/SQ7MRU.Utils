@@ -69,8 +69,15 @@ namespace SQ7MRU.Utils
         private string[] AdifRecords()
         {
             string adif = File.ReadAllText(filepath);
-            string[] RawRecords = adif.Split(new string[] { "<EOH>" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(new string[] { "<EOR>" }, StringSplitOptions.RemoveEmptyEntries);
-            return RawRecords;
+            if (adif.Contains("<EOH>"))
+            {
+                string[] RawRecords = adif?.Split(new string[] { "<EOH>" }, StringSplitOptions.RemoveEmptyEntries)[1]?.Split(new string[] { "<EOR>" }, StringSplitOptions.RemoveEmptyEntries);
+                return RawRecords;
+            }
+            else
+            {
+                return new string[0];
+            }
         }
 
         public void Dispose()
