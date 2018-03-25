@@ -173,7 +173,6 @@ namespace SQ7MRU.Utils
                         {
                             CallAndQTH callqth = new CallAndQTH();
                             callqth.QTH = "";
-                            //callqth.CallSign = this.callsign;
                             callqth.CallSign = form.ChildNodes[5]?.ChildNodes[1]?.InnerText;
                             callqth.UserID = form.Elements("input")?.ToArray()[0]?.Attributes["value"]?.Value;
                             callqth.HamID = form.Elements("input")?.ToArray()[1]?.Attributes["value"]?.Value;
@@ -234,7 +233,7 @@ namespace SQ7MRU.Utils
                 result.EnsureSuccessStatusCode();
                 var response = await result.Content.ReadAsStringAsync();
                 var adifUrl = Regex.Match(response, @"((downloadedfiles\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString();
-                var adifFile = Path.Combine(path, callQth.CallSign.Replace("/", "_") + "-" + Regex.Replace(callQth.QTH, patternAlphaNumeric, "") + ".ADIF");
+                var adifFile = Path.Combine(path, $"{callQth.CallSign.Replace("/", "_")}{Regex.Replace(callQth.QTH, patternAlphaNumeric, "")}.ADIF");
                 result = client.GetAsync(adifUrl).Result;
                 result.EnsureSuccessStatusCode();
                 var adif = await result.Content.ReadAsStringAsync();
