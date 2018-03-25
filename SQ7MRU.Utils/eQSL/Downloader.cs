@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Threading;
+using HtmlAgilityPack;
 
 namespace SQ7MRU.Utils
 {
@@ -98,6 +99,7 @@ namespace SQ7MRU.Utils
                         {
                         new KeyValuePair<string, string>("HamID", hamId),
                         new KeyValuePair<string, string>("EnteredPassword", this.password),
+                        new KeyValuePair<string, string>("Callsign", this.callsign),
                         new KeyValuePair<string, string>("SelectCallsign","Log+In")
                         });
 
@@ -127,6 +129,7 @@ namespace SQ7MRU.Utils
                     content = new FormUrlEncodedContent(new[]
                     {
                         new KeyValuePair<string, string>("HamID", hamID),
+                        new KeyValuePair<string, string>("Callsign", callSign),
                         new KeyValuePair<string, string>("EnteredPassword", this.password),
                         new KeyValuePair<string, string>("SelectCallsign","Log+In")
                     });
@@ -135,7 +138,7 @@ namespace SQ7MRU.Utils
                 {
                     content = new FormUrlEncodedContent(new[]
                     {
-                        new KeyValuePair<string, string>("Callsign", this.callsign),
+                        new KeyValuePair<string, string>("Callsign", callSign),
                         new KeyValuePair<string, string>("EnteredPassword", this.password),
                         new KeyValuePair<string, string>("Login", "Go")
                     });
@@ -155,15 +158,29 @@ namespace SQ7MRU.Utils
                 result.EnsureSuccessStatusCode();
                 var response = await result.Content.ReadAsStringAsync();
 
-                response = response.Replace("<BR><STRONG>Primary</STRONG>", "");
+                response = response?.Replace("<BR><STRONG>Primary</STRONG>", "");
 
                 if (response.Contains("You currently have no other accounts attached."))
                 {
-                    CallAndQTH callqth = new CallAndQTH();
-                    callqth.CallSign = this.callsign;
-                    callqth.QTH = "";
-                    callAndQTHList.Add(callqth);
-                    callqth = null;
+                    HtmlDocument doc = new HtmlDocument();
+                    
+                    doc.LoadHtml(response);
+                    var forms = doc.DocumentNode.SelectNodes("//form");
+
+                    foreach (var form in forms)
+                    {
+                        if (form.Attributes["action"].Value == "AttachAccount.cfm")
+                        {
+                            CallAndQTH callqth = new CallAndQTH();
+                            callqth.QTH = "";
+                            //callqth.CallSign = this.callsign;
+                            callqth.CallSign = form.ChildNodes[5]?.ChildNodes[1]?.InnerText;
+                            callqth.UserID = form.Elements("input")?.ToArray()[0]?.Attributes["value"]?.Value;
+                            callqth.HamID = form.Elements("input")?.ToArray()[1]?.Attributes["value"]?.Value;
+                            callAndQTHList.Add(callqth);
+                        }
+                    }
+                    
                 }
                 else
                 {

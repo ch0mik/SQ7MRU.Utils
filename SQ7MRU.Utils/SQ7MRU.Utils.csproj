@@ -42,5 +42,9 @@
     <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
 	  <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.7.2" />
+  </ItemGroup>
 
 </Project>
