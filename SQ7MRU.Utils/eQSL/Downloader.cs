@@ -289,12 +289,12 @@ namespace SQ7MRU.Utils
                                 retry +=1; 
                                 if(retry > 1) 
                                     {
-                                        logger.LogTrace($"Retry {retry} for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}");   
+                                        logger.LogTrace($"Retry {retry} for CallSign {callQth.CallSign} : Call {qso.Key.CALL} Mode {qso.Key.SUBMODE ?? qso.Key.MODE} on {qso.Key.QSO_DATE}");   
                                     }
                                 
                                 if(retry == maxRetry)
                                     {
-                                        logger.LogWarning($"Abort downloading eQSL for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}, maxRetry {retry}");   
+                                        logger.LogWarning($"Abort downloading eQSL for CallSign {callQth.CallSign} : Call {qso.Key.CALL} Mode {qso.Key.SUBMODE ?? qso.Key.MODE} on {qso.Key.QSO_DATE}, maxRetry {retry}");   
                                         slowDown = false;
                                         break;
                                     }
@@ -314,7 +314,7 @@ namespace SQ7MRU.Utils
 
                                 if(response.Contains("There is no entry for a QSO"))
                                 {
-                                     logger.LogWarning($"No confirm eQSL for CallSign {callQth.CallSign} : Call {qso.Key.call} Mode {qso.Key.submode ?? qso.Key.mode} on {qso.Key.qso_date}");
+                                     logger.LogWarning($"No confirm eQSL for CallSign {callQth.CallSign} : Call {qso.Key.CALL} Mode {qso.Key.SUBMODE ?? qso.Key.MODE} on {qso.Key.QSO_DATE}");
                                      slowDown = false; 
                                      break;
                                 }
@@ -401,15 +401,15 @@ namespace SQ7MRU.Utils
             {
                 if(old)
                 {
-                return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
-                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.band}&Mode={r.mode}";
+                return $"DisplayeQSL.cfm?Callsign={r.CALL}&VisitorCallsign={c.CallSign}" +
+                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.QSO_DATE + r.TIME_ON).Replace(" ", "%20")}:00.0" +
+                                 $"&Band={r.BAND}&Mode={r.MODE}";
                 }
                 else
                 {
-                return $"DisplayeQSL.cfm?Callsign={r.call}&VisitorCallsign={c.CallSign}" +
-                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.qso_date + r.time_on).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.band}&Mode={r.submode}";
+                return $"DisplayeQSL.cfm?Callsign={r.CALL}&VisitorCallsign={c.CallSign}" +
+                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.QSO_DATE + r.TIME_ON).Replace(" ", "%20")}:00.0" +
+                                 $"&Band={r.BAND}&Mode={r.SUBMODE}";
                 }
             }
             catch (Exception exc)

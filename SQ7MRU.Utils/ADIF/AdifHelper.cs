@@ -41,7 +41,7 @@ namespace SQ7MRU.Utils
                 {
                     for (int i = 0; i < x.Length; i++)
                     {
-                        dic.Add(x[i].ToLower(), x[i + 1]);
+                        dic.Add(x[i].ToUpper(), x[i + 1]);
                         i++;
                     }
 
@@ -49,15 +49,15 @@ namespace SQ7MRU.Utils
 
                     foreach (PropertyInfo prp in props)
                     {
-                        if (dic.ContainsKey(prp.Name.ToLower()))
+                        if (dic.ContainsKey(prp.Name))
                         {
                             PropertyInfo pi = typeof(AdifRow).GetRuntimeProperty(prp.Name);
-                            pi.SetValue(AdifRow, dic[prp.Name.ToLower()], null);
+                            pi.SetValue(AdifRow, dic[prp.Name]?.Trim(), null);
                         }
                     }
                 }
 
-                if (!string.IsNullOrEmpty(AdifRow.call))
+                if (!string.IsNullOrEmpty(AdifRow.CALL))
                 {
                     adifRows.Add(AdifRow);
                 }
