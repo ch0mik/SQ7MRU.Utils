@@ -25,7 +25,7 @@ namespace SQ7MRU.Utils
                         sbRow.Append(MakeTagValue(pi.Name, v));
                     }
                 }
-                sb.AppendLine(sbRow.ToString());
+                sb.AppendLine($"{sbRow.ToString()}<EOR>");
             }
 
             return sb.ToString();
@@ -33,7 +33,7 @@ namespace SQ7MRU.Utils
 
         private static string MakeTagValue(string tag, string value)
         {
-            return $"<{tag?.ToUpper()}:{value?.Length}>{value}";
+            return $"<{tag?.ToUpper()}:{value?.Length}>{value} ";
         }
     }
 }
