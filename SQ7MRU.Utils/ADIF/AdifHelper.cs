@@ -1,102 +1,39 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using System.Text;
 
 namespace SQ7MRU.Utils
 {
-    public class AdifReader : IDisposable
+    public static class AdifHelper
     {
-        public  bool IsDisposed { get; protected set; }
-        public bool isInitialized;
-        private List<AdifRow> adifRows;
-        private ILoggerFactory loggerFactory = new LoggerFactory();
-        private string filepath;
-
-        public AdifReader(String filePath)
+        public static string ExportAsADIF(AdifRow[] rows)
         {
-            filepath = filePath;
-            isInitialized = true;
-        }
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(MakeTagValue("PROGRAMID", "SQ7MRU.Utils"));
+            sb.AppendLine(MakeTagValue("ADIF_VER", "3.0.6"));
+            sb.AppendLine(MakeTagValue("CREATED_TIMESTAMP", DateTime.UtcNow.ToString("yyyyMMdd HHmmss")));
+            sb.AppendLine("<EOH>");
 
-        public List<AdifRow> GetAdifRows()
-        {
-            string[] rawrecords = AdifRecords();
-            adifRows = new List<AdifRow>();
-
-            foreach (string record in rawrecords)
+            foreach (AdifRow qso in rows)
             {
-                AdifRow AdifRow = new AdifRow();
-
-                string[] x = Regex.Split(record.Replace("\n", "").Replace("\r", ""), @"<([^:]+):\d+[^>]*>").ToArray();
-                List<string> l = new List<string>(x);
-                l.RemoveAt(0);
-                x = l.ToArray();
-
-                var dic = new Dictionary<string, string>();
-                if (x.Length % 2 == 0)
+                StringBuilder sbRow = new StringBuilder();
+                foreach (var pi in qso.GetType().GetRuntimeProperties())
                 {
-                    for (int i = 0; i < x.Length; i++)
+                    var v = pi.GetValue(qso, null) as string;
+                    if (!string.IsNullOrEmpty(v))
                     {
-                        dic.Add(x[i].ToUpper(), x[i + 1]);
-                        i++;
-                    }
-
-                    var props = typeof(AdifRow).GetRuntimeProperties();
-
-                    foreach (PropertyInfo prp in props)
-                    {
-                        if (dic.ContainsKey(prp.Name))
-                        {
-                            PropertyInfo pi = typeof(AdifRow).GetRuntimeProperty(prp.Name);
-                            pi.SetValue(AdifRow, dic[prp.Name]?.Trim(), null);
-                        }
+                        sbRow.Append(MakeTagValue(pi.Name, v));
                     }
                 }
-
-                if (!string.IsNullOrEmpty(AdifRow.CALL))
-                {
-                    adifRows.Add(AdifRow);
-                }
+                sb.AppendLine(sbRow.ToString());
             }
 
-            return adifRows;
+            return sb.ToString();
         }
 
-        private string[] AdifRecords()
+        private static string MakeTagValue(string tag, string value)
         {
-            string adif = File.ReadAllText(filepath);
-            if (adif.Contains("<EOH>"))
-            {
-                string[] RawRecords = adif?.Split(new string[] { "<EOH>" }, StringSplitOptions.RemoveEmptyEntries)[1]?.Split(new string[] { "<EOR>" }, StringSplitOptions.RemoveEmptyEntries);
-                return RawRecords;
-            }
-            else
-            {
-                return new string[0];
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!IsDisposed)
-            {
-                if (disposing)
-                {
-                    adifRows = null;
-                }
-                isInitialized = false;
-                IsDisposed = true;
-            }
+            return $"<{tag?.ToUpper()}:{value?.Length}>{value}";
         }
     }
 }
