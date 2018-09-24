@@ -59,7 +59,7 @@ namespace SQ7MRU.Utils
 
                 if (!string.IsNullOrEmpty(AdifRow.CALL))
                 {
-                    adifRows.Add(AdifRow);
+                    adifRows.Add(AdifHelper.FixRecord(AdifRow));
                 }
             }
 

@@ -16,16 +16,7 @@ namespace SQ7MRU.Utils
 
             foreach (AdifRow qso in rows)
             {
-                StringBuilder sbRow = new StringBuilder();
-                foreach (var pi in qso.GetType().GetRuntimeProperties())
-                {
-                    var v = pi.GetValue(qso, null) as string;
-                    if (!string.IsNullOrEmpty(v))
-                    {
-                        sbRow.Append(MakeTagValue(pi.Name, v));
-                    }
-                }
-                sb.AppendLine($"{sbRow.ToString()}<EOR>");
+                sb.AppendLine(ConvertToString(qso));
             }
 
             return sb.ToString();
@@ -34,6 +25,33 @@ namespace SQ7MRU.Utils
         private static string MakeTagValue(string tag, string value)
         {
             return $"<{tag?.ToUpper()}:{value?.Length}>{value} ";
+        }
+
+        public static string ConvertToString(AdifRow row)
+        {
+            StringBuilder sbRow = new StringBuilder();
+            foreach (var pi in row.GetType().GetRuntimeProperties())
+            {
+                var v = pi.GetValue(row, null) as string;
+                if (!string.IsNullOrEmpty(v))
+                {
+                    sbRow.Append(MakeTagValue(pi.Name, v));
+                }
+            }
+
+            return $"{sbRow.ToString()}<EOR>";
+        }
+
+        public static AdifRow FixRecord(AdifRow row)
+        {
+            //ToDo 
+            //ENUM Parse
+            //HRD Log - wrong Mode 
+
+                row.BAND = row.BAND.ToLower();
+                row.CALL = row.CALL.ToUpper();
+
+            return row;
         }
     }
 }
