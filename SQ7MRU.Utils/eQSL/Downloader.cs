@@ -252,7 +252,7 @@ namespace SQ7MRU.Utils
             {
                 GetSingleAdif(callQth);
 
-                using (AdifReader ar = new AdifReader(callQth.Adif))
+                using (AdifReader ar = new AdifReader(File.ReadAllText(callQth.Adif)))
                 {
                     Parallel.ForEach(ar.GetAdifRows().ToArray(), qso =>
                     {
@@ -375,7 +375,7 @@ namespace SQ7MRU.Utils
 
         private List<string> GetUrlsFromAdif(CallAndQTH c)
         {
-            using (AdifReader ar = new AdifReader(c.Adif))
+            using (AdifReader ar = new AdifReader(File.ReadAllText(c.Adif)))
             {
                 List<string> Urls = new List<string>();
                 List<AdifRow> rows = ar.GetAdifRows();

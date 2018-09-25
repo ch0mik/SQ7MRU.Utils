@@ -14,11 +14,11 @@ namespace SQ7MRU.Utils
         public bool isInitialized;
         private List<AdifRow> adifRows;
         private ILoggerFactory loggerFactory = new LoggerFactory();
-        private string filepath;
+        private string adif;
 
-        public AdifReader(String filePath)
+        public AdifReader(string adifContent)
         {
-            filepath = filePath;
+            adif = adifContent;
             isInitialized = true;
         }
 
@@ -68,7 +68,6 @@ namespace SQ7MRU.Utils
 
         private string[] AdifRecords()
         {
-            string adif = File.ReadAllText(filepath);
             if (adif.Contains("<EOH>"))
             {
                 string[] RawRecords = adif?.Split(new string[] { "<EOH>" }, StringSplitOptions.RemoveEmptyEntries)[1]?.Split(new string[] { "<EOR>" }, StringSplitOptions.RemoveEmptyEntries);
@@ -93,6 +92,7 @@ namespace SQ7MRU.Utils
                 if (disposing)
                 {
                     adifRows = null;
+                    adif = null;
                 }
                 isInitialized = false;
                 IsDisposed = true;
