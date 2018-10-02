@@ -213,7 +213,7 @@ namespace SQ7MRU.Utils
             }).GetAwaiter().GetResult();
         }
 
-        public async Task GetSingleAdifAsync(CallAndQTH callQth)
+        private async Task GetSingleAdifAsync(CallAndQTH callQth)
         {
             logger.LogTrace($"Geting ADIF for CallSign {callQth.CallSign}");
             Logon(callQth.CallSign, callQth.HamID);
@@ -237,6 +237,32 @@ namespace SQ7MRU.Utils
                 File.WriteAllText(adifFile, adif);
                 callQth.Adif = adifFile;
                 logger.LogInformation($"ADIF for CallSign {callQth.CallSign} was saved in '{callQth.Adif}' file");
+            }
+        }
+
+        /// <summary>
+        /// Get Single ADIF
+        /// </summary>
+        /// <param name="callsign"></param>
+        /// <param name="passwd"></param>
+        /// <param name="hamId"></param>
+        /// <param name="qth"></param>
+        /// <returns></returns>
+        public string GetSingleAdif(string callsign, string passwd, string hamId = null)
+        {
+            logger.LogTrace($"Geting ADIF for CallSign {callsign}");
+            Logon(callsign, hamId);
+            string action = $"DownloadInBox.cfm";
+            using (var handler = new HttpClientHandler() { CookieContainer = container })
+            using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
+            {
+                var result = client.GetAsync(action).Result;
+                result.EnsureSuccessStatusCode();
+                var response = result.Content.ReadAsStringAsync().Result;
+                var adifUrl = Regex.Match(response, @"((downloadedfiles\/)+[\w\d:#@%/;$()~_?\+-=\\\.&]*)").ToString();
+                result = client.GetAsync(adifUrl).Result;
+                result.EnsureSuccessStatusCode();
+                return result.Content.ReadAsStringAsync().Result;
             }
         }
 
