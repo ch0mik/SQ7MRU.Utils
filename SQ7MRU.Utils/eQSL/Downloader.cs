@@ -22,8 +22,8 @@ namespace SQ7MRU.Utils
         private string callsign, password, path;
         private int concurentDownloads, sleepTime, maxRetry;
         private readonly string patternAlphaNumeric = "[^a-zA-ZæÆøØåÅéÉöÖäÄüÜ-ñÑõÕéÉáÁóÓôÔzżźćńółęąśŻŹĆĄŚĘŁÓŃ _]";
-        private readonly Uri baseAddress = new Uri("http://eqsl.cc/qslcard/");
-        private List<CallAndQTH> callAndQTHList;
+        private readonly Uri baseAddress = new Uri("https://eqsl.cc/qslcard/");
+        public List<CallAndQTH> callAndQTHList;
         private ILoggerFactory _loggerFactory;
         private ILogger logger;
         public List<CallAndQTH> CallSigns { get { return callAndQTHList; } }
@@ -61,12 +61,7 @@ namespace SQ7MRU.Utils
 
                 logger = _loggerFactory.CreateLogger<Downloader>();
                 logger.LogInformation("Initialize Downloader Class");
-
-                Task.Run(async () =>
-                {
-                    await LogonAsync();
-                    await GetCallAndQTHAsync();
-                }).GetAwaiter().GetResult();
+                               
             }
             catch (Exception exc)
             {
@@ -74,7 +69,7 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private async Task LogonAsync()
+        public async Task LogonAsync()
         {
             string action = "LoginFinish.cfm";
             using (var handler = new HttpClientHandler() { CookieContainer = this.container })
@@ -148,8 +143,10 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private async Task GetCallAndQTHAsync()
+        public async Task GetCallAndQTHAsync()
         {
+            LogonAsync();
+
             string action = "MyAccounts.cfm";
             using (var handler = new HttpClientHandler() { CookieContainer = this.container })
             using (var client = new HttpClient(handler) { BaseAddress = baseAddress })
@@ -216,7 +213,7 @@ namespace SQ7MRU.Utils
             }).GetAwaiter().GetResult();
         }
 
-        private async Task GetSingleAdifAsync(CallAndQTH callQth)
+        public async Task GetSingleAdifAsync(CallAndQTH callQth)
         {
             logger.LogTrace($"Geting ADIF for CallSign {callQth.CallSign}");
             Logon(callQth.CallSign, callQth.HamID);
@@ -248,6 +245,13 @@ namespace SQ7MRU.Utils
         /// </summary>
         public void Download()
         {
+            Task.Run(async () =>
+            {
+                await LogonAsync();
+                await GetCallAndQTHAsync();
+
+            }).GetAwaiter().GetResult();
+
             foreach (CallAndQTH callQth in callAndQTHList)
             {
                 GetSingleAdif(callQth);
@@ -366,14 +370,14 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private string FilenameFromURL(string URL)
+        public string FilenameFromURL(string URL)
         {
             Dictionary<string, string> dic = UrlHelper.Decode(URL).Replace($"DisplayeQSL.cfm?", "").Split(
                                            new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(s => s.Split('=')[0].ToLower(), s => s.Split('=')[1].ToUpper());
             return $"{dic["qsodate"].Replace(":00.0", "").Replace(":", "").Replace(" ", "").Replace("-", "")}_{dic["callsign"].Replace("/", "-")}_{dic["band"]}_{dic["mode"]}.JPG";
         }
 
-        private List<string> GetUrlsFromAdif(CallAndQTH c)
+        public List<string> GetUrlsFromAdif(CallAndQTH c)
         {
             using (AdifReader ar = new AdifReader(File.ReadAllText(c.Adif)))
             {
@@ -395,7 +399,7 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private string GetUrlFromQSO(AdifRow r, CallAndQTH c, bool old = false)
+        public string GetUrlFromQSO(AdifRow r, CallAndQTH c, bool old = false)
         {
             try
             {
@@ -419,7 +423,7 @@ namespace SQ7MRU.Utils
             }
         }
 
-        private string ConvertStringQSODateTimeOnToFormattedDateTime(string QSODateTimeOn)
+        public string ConvertStringQSODateTimeOnToFormattedDateTime(string QSODateTimeOn)
         {
             string _datetimeconverted = QSODateTimeOn;
 
