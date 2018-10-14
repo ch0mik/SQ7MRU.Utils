@@ -16,7 +16,7 @@ namespace SampleApp
             Console.WriteLine("Enter Login to eqsl.cc : ");
             string login = Console.ReadLine();
             string password = ReadPassword("Enter Password : ");
-
+            Console.WriteLine("\nWorking...\n");
             var eqsl = new Downloader(login, password, loggerFactory, null, 5, 1000, 10);
             eqsl.Download(); //Download ADIFs and e-QSLs 
         }
