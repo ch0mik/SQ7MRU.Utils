@@ -18,4 +18,13 @@ private static void Main(string[] args)
    }
 ```
 
+OR
+
+```
+git clone https://github.com/ch0mik/SQ7MRU.Utils.git
+cd SQ7MRU.Utils
+cd SampleApp
+dotnet run
+```
+
 [older project]( https://eqsldownloader.codeplex.com/)
