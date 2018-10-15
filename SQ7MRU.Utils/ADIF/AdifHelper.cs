@@ -81,7 +81,7 @@ namespace SQ7MRU.Utils
             {
                 return "30m";
             }
-            else if (freq > 14.0 && freq < 10.15)
+            else if (freq > 14.0 && freq < 14.35)
             {
                 return "20m";
             }
@@ -124,10 +124,6 @@ namespace SQ7MRU.Utils
             else if (freq > 902 && freq < 928)
             {
                 return "33cm";
-            }
-            else if (freq > 1240 && freq < 1300)
-            {
-                return "23cm";
             }
             else if (freq > 1240 && freq < 1300)
             {
