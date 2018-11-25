@@ -1,5 +1,5 @@
 # SQ7MRU.Utils
-Utils to parse ADIF files and downloads the eQSLs from eqsl.cc and hrdlog.net or awards from EPC (epc-mc.eu) and DMC (www.digital-modes-club.org)
+Utils to parse ADIF files and downloads the eQSLs from eqsl.cc and hrdlog.net or awards from EPC (epc-mc.eu) and DMC (digital-modes-club.org)
 
 Nuget : [SQ7MRU.Utils](https://www.nuget.org/packages/SQ7MRU.Utils)
 
@@ -20,7 +20,7 @@ private static void Main(string[] args)
     var epc = new EPC("Yours Login To epc-mc.eu", "password");
     epc.Download();
     
-    //Download certs from DMC (www.digital-modes-club.org)
+    //Download certs from DMC (digital-modes-club.org)
     var dmc = new DMC("Yours Login To epc-mc.eu", "password");
     dmc.Download();
    }
