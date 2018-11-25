@@ -1,50 +1,81 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using SQ7MRU.Utils;
+using System;
 
 namespace SampleApp
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            Console.WriteLine("SQ7MRU eQSL Downloader\n");
-
-            Console.WriteLine("Hello World!");
             ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(LogLevel.Trace);
 
+            //eQSL.cc
+            eQSL_Example(loggerFactory);
+
+            //EPC-MC.eu
+            EPC_Example(loggerFactory);
+
+            //hrdlog.net
+            HRD_Example(loggerFactory);
+        }
+
+        private static void eQSL_Example(ILoggerFactory loggerFactory)
+        {
+            Console.WriteLine("SQ7MRU eQSL Downloader\n");
             Console.WriteLine("Enter Login to eqsl.cc : ");
             string login = Console.ReadLine();
             string password = ReadPassword("Enter Password : ");
             Console.WriteLine("\nWorking...\n");
             var eqsl = new Downloader(login, password, loggerFactory, null, 5, 1000, 10);
-            eqsl.Download(); //Download ADIFs and e-QSLs 
+            eqsl.Download(); //Download ADIFs and e-QSLs
         }
 
-         static string ReadPassword(string message)
+        private static void EPC_Example(ILoggerFactory loggerFactory)
+        {
+            Console.WriteLine("SQ7MRU EPC Downloader\n");
+            Console.WriteLine("Enter Login to epc-mc.eu : ");
+            string login = Console.ReadLine();
+            string password = ReadPassword("Enter Password : ");
+            Console.WriteLine("\nWorking...\n");
+            var epc = new EPC(login, password, loggerFactory, null);
+        }
+
+        private static void HRD_Example(ILoggerFactory loggerFactory)
+        {
+            Console.WriteLine("SQ7MRU iQSL Downloader\n");
+            Console.WriteLine("Enter Login to hrdlog.net : ");
+            string login = Console.ReadLine();
+            Console.WriteLine("\nWorking...\n");
+            var iQSL = new iQSL(login, loggerFactory, null);
+        }
+
+        private static string ReadPassword(string message)
+        {
+            Console.WriteLine(message);
+            string password = "";
+            while (true)
             {
-                Console.WriteLine(message);
-                string password = "";
-                while (true)
+                ConsoleKeyInfo key = Console.ReadKey(true);
+                switch (key.Key)
                 {
-                    ConsoleKeyInfo key = Console.ReadKey(true);
-                    switch (key.Key)
-                    {
-                        case ConsoleKey.Escape:
-                            return null;
-                        case ConsoleKey.Enter:
-                            return password;
-                        case ConsoleKey.Backspace:
-                            password = password.Substring(0, (password.Length - 1));
-                            Console.Write("\b \b");
-                            break;
-                        default:
-                            password += key.KeyChar;
-                            Console.Write("*");
-                            break;
-                    }
+                    case ConsoleKey.Escape:
+                        return null;
+
+                    case ConsoleKey.Enter:
+                        return password;
+
+                    case ConsoleKey.Backspace:
+                        password = password.Substring(0, (password.Length - 1));
+                        Console.Write("\b \b");
+                        break;
+
+                    default:
+                        password += key.KeyChar;
+                        Console.Write("*");
+                        break;
                 }
             }
+        }
     }
-
 }

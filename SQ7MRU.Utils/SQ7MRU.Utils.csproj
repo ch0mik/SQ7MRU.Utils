@@ -5,17 +5,17 @@
     <TargetFrameworks>netcoreapp1.1;netstandard1.3;netcoreapp2.0;netstandard2.0;net46;net47</TargetFrameworks>
     <OutputTypeEx>library</OutputTypeEx>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc or hrdlog.net</Description>
+    <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc, hrdlog.net and epc-mc.eu</Description>
     <PackageId>SQ7MRU.Utils</PackageId>
 	<Authors>Pawel Janowski SQ7MRU</Authors>
     <Company>HamRadio</Company>
-    <Version>1.1.8</Version>
+    <Version>1.2.0</Version>
     <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/ch0mik/SQ7MRU.Utils/master/LICENSE</PackageLicenseUrl>
-    <Copyright>SQ7MRU (C) 2017</Copyright>
-    <AssemblyVersion>1.1.8.0</AssemblyVersion>
-    <FileVersion>1.1.8.0</FileVersion>
+    <Copyright>SQ7MRU (C) 2018</Copyright>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <RepositoryType>C#</RepositoryType>
     <PackageTags>HamRadio, eQSL, ADIF</PackageTags>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
