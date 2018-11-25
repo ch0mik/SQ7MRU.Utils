@@ -154,7 +154,6 @@ namespace SQ7MRU.Utils
 
         public void GetCertsOld()
         {
-            string pattern = @"location.href = 'https:\/\/www\.digital-modes-club\.org\/awards_pdf2\/(.*)';";
             string action = "/awards_pdf2/download1-user-old-V3.php";
 
             logger.LogInformation($"Begin work for old awards");
@@ -182,16 +181,11 @@ namespace SQ7MRU.Utils
 
                          if (!File.Exists(fileName))
                          {
-
-                             Task.Run(async () =>
-                             {
-                                 string[] parameters = option.Attributes["value"]?.Value?.Split(new char[] { '-' });
-                                 var content = client.GetAsync($"/awards_pdf2/V3_jpg_{parameters[1]?.Trim()}.php?awid={parameters[0]?.Trim()}&ad=user").Result.Content;
-                                 byte[] img = content.ReadAsByteArrayAsync().Result;
-                                 File.WriteAllBytes(fileName, img);
-                                 logger.LogInformation($"Downloaded {name} to {fileName}");
-
-                             }).GetAwaiter().GetResult();
+                             string[] parameters = option.Attributes["value"]?.Value?.Split(new char[] { '-' });
+                             var content = client.GetAsync($"/awards_pdf2/V3_jpg_{parameters[1]?.Trim()}.php?awid={parameters[0]?.Trim()}&ad=user").Result.Content;
+                             byte[] img = content.ReadAsByteArrayAsync().Result;
+                             File.WriteAllBytes(fileName, img);
+                             logger.LogInformation($"Downloaded {name} to {fileName}");
                          }
                          else
                          {

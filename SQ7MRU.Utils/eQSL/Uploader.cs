@@ -14,7 +14,6 @@ namespace SQ7MRU.Utils
     {
 
         private readonly CookieContainer container;
-        private int concurentDownloads, sleepTime, maxRetry;
         private readonly Uri baseAddress = new Uri("https://eqsl.cc/qslcard/");
         private ILoggerFactory _loggerFactory;
         private ILogger logger;

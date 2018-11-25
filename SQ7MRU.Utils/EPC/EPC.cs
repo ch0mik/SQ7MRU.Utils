@@ -109,7 +109,6 @@ namespace SQ7MRU.Utils
             }
         }
 
-
         private void GetCerts(string awardGroup)
         {
             logger.LogInformation($"Begin work for {awardGroup}");
@@ -130,7 +129,6 @@ namespace SQ7MRU.Utils
 
                 if (!doc.DocumentNode.SelectSingleNode("//div[@class=\"tabbody-content\"]").InnerText.Contains("You have not worked any"))
                 {
-
                     var form = doc.DocumentNode.SelectSingleNode("//div[@itemprop=\"articleBody\"]").SelectNodes("//form[contains(@action,'award')]").First();
                     action = form.Attributes["action"].Value;
                     string currentDirectory = Path.Combine(_path, awardGroup);
@@ -161,14 +159,10 @@ namespace SQ7MRU.Utils
                                 new KeyValuePair<string, string>(submit,"Submit")
                                 });
 
-
-                                    Task.Run(async () =>
-                                    {
-                                        var content = client.PostAsync(action, body).Result.Content;
-                                        byte[] img = content.ReadAsByteArrayAsync().Result;
-                                        File.WriteAllBytes(fileName, img);
-                                        logger.LogInformation($"Downloaded {awardGroup} => {name} to {fileName}");
-                                    }).GetAwaiter().GetResult();
+                                    var content = client.PostAsync(action, body).Result.Content;
+                                    byte[] img = content.ReadAsByteArrayAsync().Result;
+                                    File.WriteAllBytes(fileName, img);
+                                    logger.LogInformation($"Downloaded {awardGroup} => {name} to {fileName}");
                                 }
                                 else
                                 {
@@ -186,7 +180,6 @@ namespace SQ7MRU.Utils
                 {
                     logger.LogInformation($"Skiping the {awardGroup} - no awards");
                 }
-
             }
         }
     }

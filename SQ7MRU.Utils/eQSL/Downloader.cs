@@ -145,7 +145,7 @@ namespace SQ7MRU.Utils
 
         public async Task GetCallAndQTHAsync()
         {
-            LogonAsync();
+            await LogonAsync();
 
             string action = "MyAccounts.cfm";
             using (var handler = new HttpClientHandler() { CookieContainer = this.container })
