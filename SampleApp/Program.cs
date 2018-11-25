@@ -39,6 +39,7 @@ namespace SampleApp
             string password = ReadPassword("Enter Password : ");
             Console.WriteLine("\nWorking...\n");
             var epc = new EPC(login, password, loggerFactory, null);
+            epc.Download(); //Download certs
         }
 
         private static void HRD_Example(ILoggerFactory loggerFactory)
@@ -48,6 +49,7 @@ namespace SampleApp
             string login = Console.ReadLine();
             Console.WriteLine("\nWorking...\n");
             var iQSL = new iQSL(login, loggerFactory, null);
+            iQSL.Download(); //Download iQSLs
         }
 
         private static string ReadPassword(string message)

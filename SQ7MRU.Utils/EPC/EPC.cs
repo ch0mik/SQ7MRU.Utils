@@ -35,7 +35,10 @@ namespace SQ7MRU.Utils
 
             logger = _loggerFactory.CreateLogger<EPC>();
             logger.LogInformation($"Initialize {nameof(EPC)} Class");
+        }
 
+        public void Download()
+        {
             try
             {
                 //Logon first
@@ -47,7 +50,7 @@ namespace SQ7MRU.Utils
                     GetCerts(group);
                 }
             }
-            catch(Exception exc)
+            catch (Exception exc)
             {
                 logger.LogCritical(exc.Message);
             }
