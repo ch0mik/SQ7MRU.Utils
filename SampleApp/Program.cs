@@ -13,10 +13,13 @@ namespace SampleApp
             //eQSL.cc
             eQSL_Example(loggerFactory);
 
-            //EPC-MC.eu
+            //EPC : EPC-MC.eu
             EPC_Example(loggerFactory);
 
-            //hrdlog.net
+            //DMC : www.digital-modes-club.org
+            DMC_Example(loggerFactory);
+
+            //HRD : hrdlog.net
             HRD_Example(loggerFactory);
         }
 
@@ -40,6 +43,17 @@ namespace SampleApp
             Console.WriteLine("\nWorking...\n");
             var epc = new EPC(login, password, loggerFactory, null);
             epc.Download(); //Download certs
+        }
+
+        private static void DMC_Example(ILoggerFactory loggerFactory)
+        {
+            Console.WriteLine("SQ7MRU DMC Downloader\n");
+            Console.WriteLine("Enter Login to www.digital-modes-club.org : ");
+            string login = Console.ReadLine();
+            string password = ReadPassword("Enter Password : ");
+            Console.WriteLine("\nWorking...\n");
+            var dmc = new DMC(login, password, loggerFactory, null);
+            dmc.Download(); //Download certs
         }
 
         private static void HRD_Example(ILoggerFactory loggerFactory)
