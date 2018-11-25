@@ -15,6 +15,9 @@ private static void Main(string[] args)
     //Downloads iQSLs from hrdlog.net
     var hrd = new iQSL("sq7mru");
     hrd.Download();
+    
+    //Download certs from EPC (epc-mc.eu)
+    var epc = new EPC(login, password, loggerFactory, null);
    }
 ```
 
