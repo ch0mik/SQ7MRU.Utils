@@ -17,7 +17,7 @@ private static void Main(string[] args)
     hrd.Download();
     
     //Download certs from EPC (epc-mc.eu)
-    var epc = new EPC(login, password, loggerFactory, null);
+    var epc = new EPC(login, password);
    }
 ```
 
