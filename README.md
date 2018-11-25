@@ -18,6 +18,7 @@ private static void Main(string[] args)
     
     //Download certs from EPC (epc-mc.eu)
     var epc = new EPC(login, password);
+    epc.Download();
    }
 ```
 
