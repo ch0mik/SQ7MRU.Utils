@@ -19,6 +19,10 @@ private static void Main(string[] args)
     //Download certs from EPC (epc-mc.eu)
     var epc = new EPC("Yours Login To epc-mc.eu", "password");
     epc.Download();
+    
+    //Download certs from DMC (www.digital-modes-club.org)
+    var dmc = new DMC("Yours Login To epc-mc.eu", "password");
+    dmc.Download();
    }
 ```
 
