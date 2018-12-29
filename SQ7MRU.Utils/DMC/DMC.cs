@@ -55,11 +55,11 @@ namespace SQ7MRU.Utils
 
                 Task.Run(async () =>
                 {
-                    doc.LoadHtml(await client.GetAsync("/").Result.Content.ReadAsStringAsync()); ;
+                    doc.LoadHtml(await client.GetAsync("/").Result?.Content?.ReadAsStringAsync()); ;
                 }).GetAwaiter().GetResult();
 
                 string action = "/index.php/en/";
-                var form = doc.DocumentNode.SelectSingleNode($"//form[@action=\"{action}\"]");
+                var form = doc?.DocumentNode?.SelectSingleNode($"//form[@action=\"{action}\"]");
 
                 FormUrlEncodedContent content = new FormUrlEncodedContent(new[]
                 {
@@ -73,12 +73,12 @@ namespace SQ7MRU.Utils
                         new KeyValuePair<string, string>(form?.SelectNodes("//input[@value=\"1\"]")[0]?.Attributes["name"]?.Value,"1"),
                 });
 
-                var result = client.PostAsync(action, content).Result;
-                result.EnsureSuccessStatusCode();
+                var result = client.PostAsync(action, content)?.Result;
+                result?.EnsureSuccessStatusCode();
 
                 Task.Run(async () =>
                 {
-                    doc.LoadHtml(await result.Content.ReadAsStringAsync());
+                    doc.LoadHtml(await result?.Content?.ReadAsStringAsync());
                 }).GetAwaiter().GetResult();
             }
         }
@@ -110,15 +110,15 @@ namespace SQ7MRU.Utils
 
                 Task.Run(async () =>
                 {
-                    doc.LoadHtml(await client.GetAsync(action).Result.Content.ReadAsStringAsync()); ;
+                    doc.LoadHtml(await client.GetAsync(action)?.Result?.Content?.ReadAsStringAsync()); ;
                 }).GetAwaiter().GetResult();
 
-                var form = doc.DocumentNode.SelectSingleNode("//form");
-                action = $"/awards_pdf2/{form.Attributes["action"].Value}";
-                string datan_ser = form.SelectSingleNode("//input[@name=\"datan_ser\"]").Attributes["value"].Value;
-                string setcall = form.SelectSingleNode("//input[@name=\"setcall\"]").Attributes["value"].Value;
+                var form = doc?.DocumentNode?.SelectSingleNode("//form");
+                action = $"/awards_pdf2/{form?.Attributes["action"]?.Value}";
+                string datan_ser = form?.SelectSingleNode("//input[@name=\"datan_ser\"]")?.Attributes["value"]?.Value;
+                string setcall = form?.SelectSingleNode("//input[@name=\"setcall\"]")?.Attributes["value"]?.Value;
 
-                foreach (var option in doc.DocumentNode.SelectNodes("//select[@name=\"ID_aw\"]/option"))
+                foreach (var option in doc?.DocumentNode?.SelectNodes("//select[@name=\"ID_aw\"]/option"))
                 {
                     string name = option.InnerText?.Trim();
 
