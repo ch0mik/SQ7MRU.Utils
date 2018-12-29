@@ -118,34 +118,37 @@ namespace SQ7MRU.Utils
                 string datan_ser = form?.SelectSingleNode("//input[@name=\"datan_ser\"]")?.Attributes["value"]?.Value;
                 string setcall = form?.SelectSingleNode("//input[@name=\"setcall\"]")?.Attributes["value"]?.Value;
 
-                foreach (var option in doc?.DocumentNode?.SelectNodes("//select[@name=\"ID_aw\"]/option"))
+                if (setcall != null)
                 {
-                    string name = option.InnerText?.Trim();
-
-                    if (!name.Contains("please select"))
+                    foreach (var option in doc?.DocumentNode?.SelectNodes("//select[@name=\"ID_aw\"]/option"))
                     {
-                        string fileName = Path.Combine(_path, $"{name.Replace(" ", "_")}.jpg");
+                        string name = option?.InnerText?.Trim() ?? "";
 
-                        if (!File.Exists(fileName))
+                        if (!name.Contains("please select"))
                         {
-                            FormUrlEncodedContent body = new FormUrlEncodedContent(new[]  {
-                                new KeyValuePair<string, string>("ID_aw", option.Attributes["value"].Value),
+                            string fileName = Path.Combine(_path, $"{name?.Replace(" ", "_")}.jpg");
+
+                            if (!File.Exists(fileName))
+                            {
+                                FormUrlEncodedContent body = new FormUrlEncodedContent(new[]  {
+                                new KeyValuePair<string, string>("ID_aw", option?.Attributes["value"]?.Value),
                                 new KeyValuePair<string, string>("pdfjpg", "jpg"),
                                 new KeyValuePair<string, string>("setcall",setcall),
                                 new KeyValuePair<string, string>("datan_ser",datan_ser),
                                 new KeyValuePair<string, string>("downl","Download")});
 
-                            Task.Run(async () =>
-                            {
-                                var match = Regex.Match(await client.PostAsync(action, body).Result.Content.ReadAsStringAsync(), pattern);
-                                if (match.Success && match.Groups.Count == 2)
+                                Task.Run(async () =>
                                 {
-                                    var content = client.GetAsync($"/awards_pdf2/{match.Groups[1].Value}").Result.Content;
-                                    byte[] img = content.ReadAsByteArrayAsync().Result;
-                                    File.WriteAllBytes(fileName, img);
-                                    logger.LogInformation($"Downloaded {name} to {fileName}");
-                                }
-                            }).GetAwaiter().GetResult();
+                                    var match = Regex.Match(await client.PostAsync(action, body)?.Result?.Content?.ReadAsStringAsync(), pattern);
+                                    if (match.Success && match?.Groups?.Count == 2)
+                                    {
+                                        var content = client.GetAsync($"/awards_pdf2/{match.Groups[1].Value}")?.Result?.Content;
+                                        byte[] img = content?.ReadAsByteArrayAsync()?.Result;
+                                        File.WriteAllBytes(fileName, img);
+                                        logger.LogInformation($"Downloaded {name} to {fileName}");
+                                    }
+                                }).GetAwaiter().GetResult();
+                            }
                         }
                     }
                 }
@@ -164,35 +167,38 @@ namespace SQ7MRU.Utils
 
                 Task.Run(async () =>
                 {
-                    doc.LoadHtml(await client.GetAsync(action).Result.Content.ReadAsStringAsync()); ;
+                    doc.LoadHtml(await client.GetAsync(action)?.Result?.Content?.ReadAsStringAsync()); ;
                 }).GetAwaiter().GetResult();
 
-                var form = doc.DocumentNode.SelectSingleNode("//form");
-                action = $"/awards_pdf2/{form.Attributes["action"].Value}";
-                string setcall = form.SelectSingleNode("//input[@name=\"setcall\"]").Attributes["value"].Value;
+                var form = doc?.DocumentNode?.SelectSingleNode("//form");
+                action = $"/awards_pdf2/{form?.Attributes["action"]?.Value}";
+                string setcall = form?.SelectSingleNode("//input[@name=\"setcall\"]")?.Attributes["value"]?.Value;
 
-                Parallel.ForEach(doc.DocumentNode.SelectNodes("//select[@name=\"ID_aw\"]/option"), option =>
-                 {
-                     string name = option.InnerText?.Trim();
-
-                     if (!name.Contains("please select"))
+                if (setcall != null)
+                {
+                    Parallel.ForEach(doc?.DocumentNode?.SelectNodes("//select[@name=\"ID_aw\"]/option"), option =>
                      {
-                         string fileName = Path.Combine(_path, $"{name.Replace(" ", "_")}.jpg");
+                         string name = option?.InnerText?.Trim() ?? "";
 
-                         if (!File.Exists(fileName))
+                         if (!name.Contains("please select"))
                          {
-                             string[] parameters = option.Attributes["value"]?.Value?.Split(new char[] { '-' });
-                             var content = client.GetAsync($"/awards_pdf2/V3_jpg_{parameters[1]?.Trim()}.php?awid={parameters[0]?.Trim()}&ad=user").Result.Content;
-                             byte[] img = content.ReadAsByteArrayAsync().Result;
-                             File.WriteAllBytes(fileName, img);
-                             logger.LogInformation($"Downloaded {name} to {fileName}");
+                             string fileName = Path.Combine(_path, $"{name.Replace(" ", "_")}.jpg");
+
+                             if (!File.Exists(fileName))
+                             {
+                                 string[] parameters = option.Attributes["value"]?.Value?.Split(new char[] { '-' });
+                                 var content = client.GetAsync($"/awards_pdf2/V3_jpg_{parameters[1]?.Trim()}.php?awid={parameters[0]?.Trim()}&ad=user")?.Result?.Content;
+                                 byte[] img = content?.ReadAsByteArrayAsync()?.Result;
+                                 File.WriteAllBytes(fileName, img);
+                                 logger.LogInformation($"Downloaded {name} to {fileName}");
+                             }
+                             else
+                             {
+                                 logger.LogTrace($"Skiped {name} : file exists");
+                             }
                          }
-                         else
-                         {
-                             logger.LogTrace($"Skiped {name} : file exists");
-                         }
-                     }
-                 });
+                     });
+                }
             }
         }
     }
