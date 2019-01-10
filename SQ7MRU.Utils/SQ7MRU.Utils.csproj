@@ -9,13 +9,13 @@
     <PackageId>SQ7MRU.Utils</PackageId>
 	<Authors>Pawel Janowski SQ7MRU</Authors>
     <Company>HamRadio</Company>
-    <Version>1.2.3</Version>
+    <Version>1.2.4</Version>
     <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/ch0mik/SQ7MRU.Utils/master/LICENSE</PackageLicenseUrl>
     <Copyright>SQ7MRU (C) 2018</Copyright>
-    <AssemblyVersion>1.2.3.0</AssemblyVersion>
-    <FileVersion>1.2.3.0</FileVersion>
+    <AssemblyVersion>1.2.4.0</AssemblyVersion>
+    <FileVersion>1.2.4.0</FileVersion>
     <RepositoryType>C#</RepositoryType>
     <PackageTags>HamRadio, eQSL, ADIF, EPC, DMC, HRD, Digital Modes Club</PackageTags>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
