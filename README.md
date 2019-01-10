@@ -35,4 +35,6 @@ cd SampleApp
 dotnet run
 ```
 
+Important Info : Yours Account in eQSL.cc should be set prefered Language to English.
+
 [older project]( https://eqsldownloader.codeplex.com/)
