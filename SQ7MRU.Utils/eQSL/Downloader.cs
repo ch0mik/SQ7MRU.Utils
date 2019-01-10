@@ -332,16 +332,7 @@ namespace SQ7MRU.Utils
                                 var result = client.GetAsync(action).Result;
                                 result.EnsureSuccessStatusCode();
                                 var response = await result.Content.ReadAsStringAsync();
-                                
-                                if(response.Contains("There is no entry for a QSO"))
-                                {
-                                    action = GetUrlFromQSO(qso.Key, callQth, true);
-                                    file = FilenameFromURL(action);
-                                    result = client.GetAsync(action).Result;
-                                    result.EnsureSuccessStatusCode();
-                                    response = await result.Content.ReadAsStringAsync();
-                                }
-
+                               
                                 if(response.Contains("There is no entry for a QSO"))
                                 {
                                      logger.LogWarning($"No confirm eQSL for CallSign {callQth.CallSign} : Call {qso.Key.CALL} Mode {qso.Key.SUBMODE ?? qso.Key.MODE} on {qso.Key.QSO_DATE}");
@@ -425,22 +416,15 @@ namespace SQ7MRU.Utils
             }
         }
 
-        public string GetUrlFromQSO(AdifRow r, CallAndQTH c, bool old = false)
+        public string GetUrlFromQSO(AdifRow r, CallAndQTH c)
         {
             try
             {
-                if(old)
-                {
-                return $"DisplayeQSL.cfm?Callsign={r.CALL}&VisitorCallsign={c.CallSign}" +
+               return $"DisplayeQSL.cfm?Callsign={r.CALL}&VisitorCallsign={c.CallSign}" +
                                  $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.QSO_DATE + r.TIME_ON).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.BAND}&Mode={r.MODE}";
-                }
-                else
-                {
-                return $"DisplayeQSL.cfm?Callsign={r.CALL}&VisitorCallsign={c.CallSign}" +
-                                 $"&QSODate={ConvertStringQSODateTimeOnToFormattedDateTime(r.QSO_DATE + r.TIME_ON).Replace(" ", "%20")}:00.0" +
-                                 $"&Band={r.BAND}&Mode={r.SUBMODE}";
-                }
+                                 $"&Band={r.BAND}&Mode={r.SUBMODE ?? r.MODE}";
+               
+               
             }
             catch (Exception exc)
             {
