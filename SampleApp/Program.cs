@@ -8,7 +8,10 @@ namespace SampleApp
     {
         private static void Main(string[] args)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory().AddConsole(LogLevel.Trace);
+            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddConsole().SetMinimumLevel(LogLevel.Trace);
+            });
 
             //eQSL.cc
             eQSL_Example(loggerFactory);

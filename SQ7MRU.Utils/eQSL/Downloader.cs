@@ -391,7 +391,50 @@ namespace SQ7MRU.Utils
         {
             Dictionary<string, string> dic = UrlHelper.Decode(URL).Replace($"DisplayeQSL.cfm?", "").Split(
                                            new char[] { '&' }, StringSplitOptions.RemoveEmptyEntries).ToDictionary(s => s.Split('=')[0].ToLower(), s => s.Split('=')[1].ToUpper());
-            return $"{dic["qsodate"].Replace(":00.0", "").Replace(":", "").Replace(" ", "").Replace("-", "")}_{dic["callsign"].Replace("/", "-")}_{dic["band"]}_{dic["mode"]}.JPG";
+
+            string qsoDateRaw = dic.ContainsKey("qsodate") ? dic["qsodate"].Replace(":00.0", "") : string.Empty; // e.g. 2012-05-29 22:14
+            string datePart = qsoDateRaw;
+            string timePart = string.Empty;
+
+            // Try parse known patterns: yyyy-MM-dd HH:mm or yyyyMMddHHmm or yyyy-MM-ddHH:mm etc.
+            if (!string.IsNullOrEmpty(qsoDateRaw))
+            {
+                // Normalize separators
+                var normalized = qsoDateRaw.Replace(" ", "").Replace(":", "").Replace("-", ""); // e.g. 201205292214 or 20120529 2214 -> 201205292214
+                if (normalized.Length >= 12)
+                {
+                    // yyyyMMddHHmm -> split
+                    datePart = normalized.Substring(0, 8); // yyyyMMdd
+                    timePart = normalized.Substring(8, 4); // HHmm
+                }
+                else
+                {
+                    // fallback: remove non-digit and try to parse digits
+                    var digits = new string(qsoDateRaw.Where(char.IsDigit).ToArray());
+                    if (digits.Length >= 12)
+                    {
+                        datePart = digits.Substring(0, 8);
+                        timePart = digits.Substring(8, 4);
+                    }
+                    else
+                    {
+                        // give up and use raw cleaned-up string
+                        datePart = qsoDateRaw.Replace(" ", "").Replace(":", "").Replace("-", "");
+                    }
+                }
+            }
+
+            string callsign = dic.ContainsKey("callsign") ? dic["callsign"].Replace("/", "-") : "UNKNOWN";
+            string band = dic.ContainsKey("band") ? dic["band"] : "";
+            string mode = dic.ContainsKey("mode") ? dic["mode"] : "";
+
+            if (!string.IsNullOrEmpty(timePart))
+            {
+                return $"{callsign}_{datePart}_{timePart}_{band}_{mode}.JPG";
+            }
+
+            // fallback to previous behaviour if we couldn't split date/time
+            return $"{datePart}_{callsign}_{band}_{mode}.JPG";
         }
 
         public List<string> GetUrlsFromAdif(CallAndQTH c)

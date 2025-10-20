@@ -2,51 +2,32 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>netcoreapp1.1;netstandard1.3;netcoreapp2.0;netstandard2.0;net46;net47</TargetFrameworks>
+  <TargetFrameworks>net9.0</TargetFrameworks>
     <OutputTypeEx>library</OutputTypeEx>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc and hrdlog.net or awards from EPC (epc-mc.eu) and DMC (www.digital-modes-club.org)</Description>
     <PackageId>SQ7MRU.Utils</PackageId>
 	<Authors>Pawel Janowski SQ7MRU</Authors>
     <Company>HamRadio</Company>
-    <Version>1.2.4</Version>
-    <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/ch0mik/SQ7MRU.Utils/master/LICENSE</PackageLicenseUrl>
-    <Copyright>SQ7MRU (C) 2018</Copyright>
-    <AssemblyVersion>1.2.4.0</AssemblyVersion>
-    <FileVersion>1.2.4.0</FileVersion>
+    <Version>1.2.5</Version>
+  <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
+  <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
+  <!-- Use SPDX expression for Apache-2.0 to satisfy modern NuGet metadata (replaces deprecated PackageLicenseUrl) -->
+  <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>SQ7MRU (C) 2025</Copyright>
+    <AssemblyVersion>1.2.5.0</AssemblyVersion>
+    <FileVersion>1.2.5.0</FileVersion>
     <RepositoryType>C#</RepositoryType>
     <PackageTags>HamRadio, eQSL, ADIF, EPC, DMC, HRD, Digital Modes Club</PackageTags>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.1' or '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-	  <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-  </ItemGroup>
- 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0' or '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-	  <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46' ">
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-	  <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
-  </ItemGroup>
-  
-  <ItemGroup Condition="'$(TargetFramework)' == 'net47' ">
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
-	  <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.7.2" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
   </ItemGroup>
 
 </Project>
