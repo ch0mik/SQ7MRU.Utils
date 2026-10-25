@@ -74,7 +74,7 @@ GitHub Actions SHALL publish desktop assets for win-x86, win-x64, win-arm64, lin
 
 - **WHEN** desktop-release is manually dispatched
 - **THEN** platform artifacts are uploaded without creating a GitHub Release
-- **AND** the release-upload job is intentionally skipped
+- **AND** packages and the combined checksum manifest are available as workflow artifacts; the GitHub release-upload step is skipped
 
 #### Scenario: One automatic desktop run
 
@@ -86,7 +86,7 @@ GitHub Actions SHALL publish desktop assets for win-x86, win-x64, win-arm64, lin
 
 - **WHEN** the desktop release matrix runs
 - **THEN** Windows ARM64 uses windows-11-arm and Linux ARM64 uses ubuntu-24.04-arm
-- **AND** each desktop RID has a distinct executable, checksum and workflow artifact name
+- **AND** each desktop RID has a distinct distribution package, checksum and workflow artifact name
 
 #### Scenario: 32-bit desktop publication
 
@@ -98,13 +98,13 @@ GitHub Actions SHALL publish desktop assets for win-x86, win-x64, win-arm64, lin
 #### Scenario: Release assets
 
 - **WHEN** all eight desktop matrix jobs succeed for a published v-prefixed release event
-- **THEN** the release job attaches Windows EXEs, native Linux/macOS executables and their SHA-256 files directly to the release for that tag without ZIP/TAR wrapping
+- **THEN** the release job attaches three Windows ZIPs, three Linux TAR.GZ archives, two macOS DMGs and a combined SHA256SUMS file to the release for that tag
 - **AND** an unsuccessful matrix job prevents release asset publication
 
 #### Scenario: Existing GitHub Release
 
 - **WHEN** a v-prefixed release is published
-- **THEN** all eight desktop executables and checksums are uploaded to that release without replacing its title or description
+- **THEN** all eight desktop packages and SHA256SUMS are uploaded to that release without replacing its title or description
 - **AND** reruns replace matching asset filenames and desktop runs for the same tag are serialized
 - **AND** the workflow does not create a release; an unavailable release causes asset publication to fail
 
@@ -115,7 +115,7 @@ Desktop publication SHALL produce one executable per RID with the .NET runtime a
 #### Scenario: Publish output verification
 
 - **WHEN** a desktop target is published
-- **THEN** the workflow checks that the output directory contains exactly the expected executable before staging it as a direct release asset
+- **THEN** the workflow checks that the output directory contains exactly the expected executable before packaging it
 - **AND** single-file publication disables trimming, embeds managed symbols and excludes external PDB files
 - **AND** any extra publish-output file fails that job and prevents release asset upload
 - **AND** library API XML documentation remains packaged in NuGet but is excluded from desktop output
@@ -125,6 +125,38 @@ Desktop publication SHALL produce one executable per RID with the .NET runtime a
 - **WHEN** the desktop project is published with an explicit RID using `dotnet publish -c Release -r <rid>`
 - **THEN** project defaults enable self-contained single-file publication and bundle native libraries for extraction, without additional CLI flags
 - **AND** ordinary local `dotnet run` without a RID remains available
+
+### Requirement: Platform distribution containers
+
+Desktop workflows SHALL wrap Windows executables in ZIP and Linux executables in TAR.GZ preserving executable permissions. macOS SHALL distribute DMG containing a Finder-launchable app bundle, icon and Applications shortcut. Every container SHALL preserve the published executable bytes and include its runtime. Packaging SHALL run only in GitHub Actions as part of delivery.
+
+#### Scenario: Archive verification
+
+- **WHEN** a Windows or Linux container is built
+- **THEN** its content is exactly the expected executable and the unpacked bytes match the publication
+- **AND** the Linux archive retains executable permissions
+
+#### Scenario: macOS distribution
+
+- **WHEN** a macOS DMG is created
+- **THEN** hdiutil verifies it and the workflow mounts it read-only to check the executable, Info.plist, icon and Applications shortcut
+- **AND** the bundle uses the build version and contains the matching self-contained executable
+- **AND** packaging does not claim Developer ID signing, notarization or Gatekeeper approval
+
+### Requirement: Final package checksums
+
+Each platform job SHALL hash its finished distribution container with SHA-256. After all builds succeed, an aggregation job SHALL validate exactly one package for every RID, a common version, the required platform formats and each package checksum, then write SHA256SUMS. Validation failure MUST prevent release upload. Hashes SHALL be generated after any operation that changes package bytes.
+
+#### Scenario: Corrupt or incomplete distribution
+
+- **WHEN** any package changes after hashing, a target is missing or packages use different versions
+- **THEN** aggregation fails without uploading release assets
+
+#### Scenario: Final manifest
+
+- **WHEN** all eight distribution packages pass verification
+- **THEN** SHA256SUMS contains sorted SHA-256 values and package filenames, excluding itself
+- **AND** manual dispatch retains the same packages and manifest as workflow artifacts without publishing a release
 
 ### Requirement: Public repository hygiene
 
@@ -141,6 +173,9 @@ The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, 
 - [.github/workflows/nuget-release.yml](../../../.github/workflows/nuget-release.yml)
 - [.github/workflows/desktop-release.yml](../../../.github/workflows/desktop-release.yml)
 - [eng/verify-package.ps1](../../../eng/verify-package.ps1)
+- [eng/package-desktop.ps1](../../../eng/package-desktop.ps1)
+- [eng/render-macos-icon.swift](../../../eng/render-macos-icon.swift)
+- [eng/desktop_checksums.py](../../../eng/desktop_checksums.py)
 - [.gitignore](../../../.gitignore)
 - [global.json](../../../global.json)
 - [Directory.Build.props](../../../Directory.Build.props)
@@ -148,4 +183,6 @@ The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, 
 ## Verification references
 
 - `eng/verify-package.ps1`
+- `eng/test_desktop_checksums.py`
+- `eng/package-desktop.ps1` archive checks and mounted-DMG checks on the corresponding runners
 - `SQ7MRU.Utils.Tests`

@@ -6,7 +6,7 @@ Commit source projects, synthetic tests and fixtures, GitHub Actions workflows, 
 
 ## Local-only material
 
-The `.gitignore` excludes build output and `artifacts/`; local release archives and installers; real ADIF/ADI logs; card downloads; environment overrides and secret files; cookie jars; local service configuration; private certificates/keys; HTTP captures, dumps and diagnostic output; local AI/cloud configuration directories; editor and OS caches.
+The `.gitignore` excludes build output and `artifacts/`; local release archives, macOS DMG images and generated app bundles; real ADIF/ADI logs; card downloads; environment overrides and secret files; cookie jars; local service configuration; private certificates/keys; HTTP captures, dumps and diagnostic output; local AI/cloud configuration directories; editor and OS caches. Release ZIP/TAR.GZ/DMG containers are generated only by GitHub Actions; packaging scripts and source artwork belong in Git.
 
 The download index `<output>/.sq7mru/downloads.sqlite`, its `downloads.lock` coordination file, and legacy JSON bundle indexes are also local-only. SQLite records relative bundle paths and certificate filenames, which can include callsigns; it does not store passwords or cookies.
 

@@ -80,6 +80,8 @@ See the [EPC download guide](docs/epc-downloads.md) for menu discovery, output l
 
 Version 2 is a breaking release. Replace `new Downloader(...).Download()`, `new iQSL(...).Download()` and `new EPC(...).Download()` with `IDownloadService.DownloadAsync`. Replace `Uploader.UploadAdif` with `IAdifUploader.UploadAsync`. Register services through `AddSq7MruUtils`; use `ServiceException.Kind` and per-file results instead of parsing log messages. Synchronous network APIs and inheritance from `HttpClient` have been removed. DMC support has been removed. ADIF parsing is case-insensitive and length-aware, supports records without a header and rejects truncated records.
 
+Downloaded eQSL ADIF logs are stored in `<output>/.sq7mru/<callsign>_<QTH>.adif`, alongside the technical SQLite index, rather than among QSL images. An empty QTH omits the suffix. Each export is refreshed; existing exports in the previous location are left untouched.
+
 ## Publishing
 
 The desktop project defaults to self-contained single-file output when a RID is specified, following [Microsoft's single-file deployment guidance](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli). For example, `dotnet publish SQ7MRU.Downloader/SQ7MRU.Downloader.csproj -c Release -r win-x64 -o artifacts/desktop-win-x64` produces one executable containing the .NET runtime and native package libraries. API documentation XML files remain in NuGet and are excluded from desktop publish output.
@@ -88,7 +90,7 @@ Three workflows live in `.github/workflows`:
 
 - `ci.yml`: build and test on Windows, Linux and macOS, each on native x64 and ARM64 runners; pack and install the generated NuGet package into an isolated consumer; retain test results and packages as workflow artifacts.
 - `nuget-release.yml`: a SemVer `v*` tag builds one candidate package, verifies that same artifact on all six native OS/CPU targets, then publishes **only SQ7MRU.Utils** to nuget.org if every verification job succeeds. Package version is taken from the tag. Prerelease tags are supported.
-- `desktop-release.yml`: publication of a GitHub Release for a `v*` tag builds/tests and produces self-contained single-file executables for `win-x86`, `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-arm`, `osx-x64`, `osx-arm64`, with SHA-256 checksums, then attaches them to that existing release. Tag pushes do not start this workflow. `workflow_dispatch` produces workflow artifacts without creating a release.
+- `desktop-release.yml`: publication of a GitHub Release for a `v*` tag builds/tests and produces self-contained single-file executables for `win-x86`, `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-arm`, `osx-x64`, `osx-arm64`. Windows ZIPs, Linux TAR.GZ archives and macOS DMGs are verified and attached to that existing release with a combined `SHA256SUMS`. Tag pushes do not start this workflow. `workflow_dispatch` produces the same packages and manifest as workflow artifacts without creating a release.
 
 Desktop publishes eight targets. The six 64-bit targets are shared with native CI and NuGet release verification; the two 32-bit desktop targets are cross-published and run source tests on their 64-bit host.
 
@@ -104,20 +106,20 @@ Native target mapping:
 
 | RID | GitHub runner | Release asset |
 | --- | --- | --- |
-| `win-x86` | `windows-latest` (cross-publish from x64) | EXE + SHA-256 |
-| `win-x64` | `windows-latest` | EXE + SHA-256 |
-| `win-arm64` | `windows-11-arm` | EXE + SHA-256 |
-| `linux-x64` | `ubuntu-latest` | Executable + SHA-256 |
-| `linux-arm64` | `ubuntu-24.04-arm` | Executable + SHA-256 |
-| `linux-arm` | `ubuntu-24.04-arm` (cross-publish from ARM64) | Executable + SHA-256 |
-| `osx-x64` | `macos-15-intel` | Executable + SHA-256 |
-| `osx-arm64` | `macos-latest` | Executable + SHA-256 |
+| `win-x86` | `windows-latest` (cross-publish from x64) | ZIP containing EXE |
+| `win-x64` | `windows-latest` | ZIP containing EXE |
+| `win-arm64` | `windows-11-arm` | ZIP containing EXE |
+| `linux-x64` | `ubuntu-latest` | TAR.GZ containing executable |
+| `linux-arm64` | `ubuntu-24.04-arm` | TAR.GZ containing executable |
+| `linux-arm` | `ubuntu-24.04-arm` (cross-publish from ARM64) | TAR.GZ containing executable |
+| `osx-x64` | `macos-15-intel` | DMG containing app bundle |
+| `osx-arm64` | `macos-latest` | DMG containing app bundle |
 
 NuGet release publication uses three stages: `pack` builds one AnyCPU candidate; `verify` downloads and executes that same package on each of the six native 64-bit targets above; `publish` uploads the original candidate only after all verification jobs succeed. The isolated consumer checks all three shipped assemblies for CPU-neutral IL and exercises the native SQLite dependency. A failure on any platform blocks NuGet publication.
 
 The native storage adapter chooses Linux filesystem flags from the running process architecture, so consuming the same portable package on ARM64 does not reuse x64-only flag values. Local ABI regression checks complement the native tests executed by the release matrix.
 
-Executables use `SQ7MRU.Downloader-<version>-<rid>` filenames, with `.exe` on Windows and separate `desktop-<rid>` workflow artifacts. The release job waits for every matrix build to succeed before attaching assets. A manual run uploads workflow artifacts only. The eight-target desktop matrix is configuration. Native execution of its six 64-bit targets must be confirmed by GitHub Actions; 32-bit targets are cross-published rather than runtime-tested natively.
+Packages use `SQ7MRU.Downloader-<version>-<rid>.zip`, `.tar.gz` or `.dmg` filenames and separate `desktop-<rid>` workflow artifacts. The aggregation job waits for every matrix build, verifies all eight final container hashes and their common version, then writes `SHA256SUMS`. The `release-desktop-packages` artifact contains all packages and that manifest, including on manual runs. Only published release events upload to GitHub Releases. The eight-target desktop matrix is configuration. Native execution of its six 64-bit targets must be confirmed by GitHub Actions; 32-bit targets are cross-published rather than runtime-tested natively.
 
 Create a version tag on GitHub to start NuGet publishing, then publish the GitHub Release for that tag to start desktop publishing. This avoids duplicate desktop builds when both events occur. Release titles and notes are preserved; the desktop job attaches assets to the existing release without creating one. Reruns replace matching desktop asset filenames, and desktop runs for the same tag are serialized. The workflow version must be committed and available on the relevant tag; rerunning an old workflow run does not pick up newer YAML changes.
 
@@ -132,8 +134,10 @@ Before the first NuGet release, configure Trusted Publishing:
 
 See [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
 
-Run the desktop application locally with `dotnet run --project ./SQ7MRU.Downloader/`. Desktop publication is handled by GitHub Actions. Each RID produces one executable with the .NET runtime included, uploaded directly as a release asset without ZIP/TAR wrapping. Native package libraries self-extract at startup; no separately installed .NET runtime is required. Managed debug symbols are embedded and external PDB files are excluded. System GUI dependencies still apply (see [Avalonia supported platforms](https://docs.avaloniaui.net/docs/supported-platforms)). macOS executables are unsigned command-line app distributions; signing, notarization and installers are not configured.
+Run the desktop application locally with `dotnet run --project ./SQ7MRU.Downloader/`. Each RID produces one executable with the .NET runtime included, then GitHub Actions wraps it in the platform's distribution container. Native package libraries self-extract at startup; no separately installed .NET runtime is required. Managed debug symbols are embedded and external PDB/API XML files are excluded. System GUI dependencies still apply (see [Avalonia supported platforms](https://docs.avaloniaui.net/docs/supported-platforms)). Archive and DMG creation runs only in GitHub Actions.
+
+Windows ZIP and Linux TAR.GZ contain only the executable; TAR.GZ retains executable permissions. macOS DMGs contain `SQ7MRU.Downloader.app` with an icon and versioned `Info.plist`, plus an Applications shortcut for drag-and-drop installation. Each DMG is verified and mounted read-only to check its contents before hashing. Developer ID signing and notarization are not configured; a DMG alone does not establish Gatekeeper trust.
 
 External sites can change forms and response formats. Tests use synthetic HTML/HTTP fixtures, not real accounts; validate authenticated flows against the services before a production release.
 
-On Linux and macOS, grant execute permission to the downloaded executable before launching it. The release provides a separate SHA-256 file for verifying each executable.
+Download `SHA256SUMS` and the desired package into the same directory. Hashes refer to the finished ZIP/TAR.GZ/DMG bytes. On Linux use `sha256sum --ignore-missing -c SHA256SUMS`. On macOS use `shasum -a 256 <package.dmg>` and compare the value with the matching manifest line; on Windows use `Get-FileHash .\<package.zip> -Algorithm SHA256`. Verify the downloaded container before extracting or opening it.

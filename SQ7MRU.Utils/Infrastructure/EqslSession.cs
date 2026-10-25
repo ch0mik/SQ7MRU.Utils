@@ -54,7 +54,7 @@ internal sealed class EqslSession(IServiceHttpSessionFactory factory, ServiceCre
             var folder = ArtifactStore.SafeName(selected.CallSign + (selected.Qth.Length > 0 ? "_" + selected.Qth : ""));
             var key = Guid.NewGuid().ToString("N");
             resources.TryAdd(key, (http, "", adif, null));
-            yield return new(Path.Combine(folder, folder + ".adif"), key, true);
+            yield return new(Path.Combine(".sq7mru", folder + ".adif"), key, true);
             using var reader = new AdifReader(Encoding.UTF8.GetString(adif));
             List<AdifRow> rows;
             try { rows = reader.GetAdifRows(cancellationToken); }

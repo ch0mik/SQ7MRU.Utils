@@ -87,42 +87,49 @@ jobs:
           if ($files.Count -ne 1 -or $files[0].Name -ne $name) {
             throw "Expected one self-contained executable, found: $($files.Name -join ', ')"
           }
-      - name: Stage standalone executable
+      - name: Package and verify desktop distribution
         shell: pwsh
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.value }}
           RELEASE_RID: ${{ matrix.rid }}
         run: |
-          $ErrorActionPreference = 'Stop'
-          $name = "SQ7MRU.Downloader-$env:RELEASE_VERSION-$env:RELEASE_RID"
-          if ($env:RELEASE_RID.StartsWith('win-')) {
-            $source = 'artifacts/publish/SQ7MRU.Downloader.exe'
-            $binary = "artifacts/$name.exe"
-          } else {
-            $source = 'artifacts/publish/SQ7MRU.Downloader'
-            $binary = "artifacts/$name"
-          }
-          Copy-Item -LiteralPath $source -Destination $binary
-          $hash = (Get-FileHash -LiteralPath $binary -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  $([IO.Path]::GetFileName($binary))" | Set-Content -LiteralPath "$binary.sha256" -Encoding ascii
+          ./eng/package-desktop.ps1 -Rid $env:RELEASE_RID -Version $env:RELEASE_VERSION
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.rid }}
-          path: artifacts/SQ7MRU.Downloader-*
+          path: artifacts/packages/SQ7MRU.Downloader-*
           if-no-files-found: error
+          overwrite: true
   release:
-    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/download-artifact@v4
         with:
           pattern: desktop-*
           merge-multiple: true
           path: artifacts
-      - name: Attach executables to GitHub Release
+      - name: Verify packages and generate SHA256SUMS
+        run: |
+          python3 -m unittest discover -s eng -p test_desktop_checksums.py
+          python3 eng/desktop_checksums.py artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-desktop-packages
+          path: |
+            artifacts/*.zip
+            artifacts/*.tar.gz
+            artifacts/*.dmg
+            artifacts/SHA256SUMS
+          if-no-files-found: error
+          overwrite: true
+      - name: Attach packages to GitHub Release
+        if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -130,4 +137,4 @@ jobs:
         run: |
           set -euo pipefail
           gh release view "$RELEASE_TAG" >/dev/null
-          gh release upload "$RELEASE_TAG" artifacts/* --clobber
+          gh release upload "$RELEASE_TAG" artifacts/*.zip artifacts/*.tar.gz artifacts/*.dmg artifacts/SHA256SUMS --clobber

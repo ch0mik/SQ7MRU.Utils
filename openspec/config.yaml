@@ -18,6 +18,8 @@ context: |
   One confined SQLite index records completed bundles; validated existing files
   and complete bundles are skipped. Counters represent logical selections.
   Legacy JSON bundle indexes migrate after certificate validation.
+  eQSL ADIF exports are refreshed directly in the same .sq7mru technical
+  directory, using callsign/QTH filenames; images retain account directories.
   Preserve cancellation, cookie isolation, bounded retries, sanitized errors,
   directory-relative/no-follow storage and eQSL rate limiting.
   No real credentials, cookies, account logs or downloaded cards belong in Git.
@@ -33,7 +35,12 @@ context: |
   Explicit-RID desktop publishes default to this mode in the project itself.
   Exclude library API XML and external PDB files from desktop output;
   keep the XML documentation in NuGet and fail on extra desktop publish files.
-  Upload desktop executables and SHA-256 files directly, without ZIP/TAR wrapping.
+  Package desktop assets only in GitHub Actions: Windows ZIP, Linux TAR.GZ,
+  macOS DMG with an app bundle, icon and Applications shortcut.
+  Verify packaged bytes and permissions; mount DMGs read-only for verification.
+  Aggregate SHA-256 hashes of final packages into SHA256SUMS, validating
+  all eight platforms and a shared version before uploading release assets.
+  macOS Developer ID signing and notarization are not configured.
   Linux x86 is excluded because the selected SDK has no application host.
   NuGet is one net10.0 AnyCPU package. Verify the same candidate package
   on all six native OS/CPU targets before publishing; test native SQLite too.
@@ -41,7 +48,7 @@ context: |
   assets for the same tag; tag pushes must not trigger duplicate desktop builds.
   Preserve existing release text; replace matching assets on rerun.
   Manual desktop runs upload artifacts only and use the SDK-evaluated version.
-  Do not create local release ZIP files as part of development.
+  Do not create local release archives or DMGs as part of development.
 
 rules:
   specs:

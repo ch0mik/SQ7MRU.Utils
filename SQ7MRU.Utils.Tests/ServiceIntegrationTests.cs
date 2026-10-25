@@ -245,7 +245,11 @@ public class ServiceIntegrationTests
             var result = await provider.GetRequiredService<IDownloadService>().DownloadAsync(new(QslService.Eqsl, new("SQ7MRU", "secret"), root));
             Assert.Equal(4, result.Downloaded); Assert.Equal(0, result.Failed);
             Assert.Contains("Home", imageAccounts); Assert.Contains("Field", imageAccounts);
-            Assert.Equal(2, Directory.GetFiles(root, "*.adif", SearchOption.AllDirectories).Length);
+            var exports = Directory.GetFiles(root, "*.adif", SearchOption.AllDirectories);
+            Assert.Equal(2, exports.Length);
+            Assert.Contains(Path.Combine(root, ".sq7mru", "SQ7MRU_Home.adif"), exports);
+            Assert.Contains(Path.Combine(root, ".sq7mru", "SQ7MRU_Field.adif"), exports);
+            Assert.Contains(result.Items, item => item.Name == Path.Combine(".sq7mru", "SQ7MRU_Home.adif"));
             Assert.Equal(2, Directory.GetFiles(root, "*.jpg", SearchOption.AllDirectories).Length);
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }

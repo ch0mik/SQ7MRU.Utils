@@ -80,6 +80,7 @@ public sealed record ServiceAccount(string CallSign, string Qth = "", string? Ha
 /// <param name="Credentials">In-memory service credentials; never include their properties in diagnostics.</param>
 /// <param name="OutputDirectory">Output root. Service/account/group paths are created beneath it.</param>
 /// <param name="Account">Selected eQSL account; null downloads all available eQSL accounts. Other services ignore it.</param>
+/// <remarks>eQSL ADIF exports are refreshed in .sq7mru beneath OutputDirectory, beside the SQLite index; graphical cards remain in their account folders.</remarks>
 public sealed record DownloadRequest(QslService Service, ServiceCredentials Credentials,
     string OutputDirectory, ServiceAccount? Account = null);
 

@@ -474,6 +474,8 @@ iQSL_HRDLOG/
 *.tar
 *.tar.gz
 *.tgz
+*.dmg
+*.app/
 *.7z
 *.sha256
 *.har

@@ -34,6 +34,13 @@ The adapter SHALL export ADIF for selected accounts, preserve complete ADIF hype
 - **WHEN** the export page contains a same-host root-relative or absolute download link
 - **THEN** the adapter retains its directory and query components
 
+#### Scenario: Technical ADIF output
+
+- **WHEN** eQSL accounts are downloaded
+- **THEN** their refreshed ADIF exports are stored directly in `<output>/.sq7mru/<callsign>_<QTH>.adif`, beside the SQLite index, omitting the QTH suffix when empty
+- **AND** account-specific filenames keep exports separate while graphical cards remain in their account directories
+- **AND** old exports in the previous location are not automatically moved or deleted
+
 ### Requirement: Confirmed ADIF upload
 
 The uploader MUST NOT automatically replay upload requests. A response SHALL count as success only when visible content has an explicit RESULT=OK marker or a positive added-record count and no recognized failure marker. Scripts, styles and comments SHALL NOT provide success evidence.
@@ -133,6 +140,7 @@ HRDLog SHALL perform a read-only callsign search and retrieve the returned card 
 - `ServiceIntegrationTests.HiddenHamIdAloneDoesNotProveAnAuthenticatedAccountList`
 - `ServiceIntegrationTests.AcceptsSuccessfulThirdAccountSelectionResponse`
 - `ServiceIntegrationTests.UploadRequiresAnUnambiguousPositiveResult`
+- `ServiceIntegrationTests.EqslSeparatesAccountsAndDownloadsAdifAndImages` covers separate technical ADIF paths for multiple accounts and preserved image output
 - `ServiceIntegrationTests.HrdSearchDeduplicatesLinksAndSkipsExistingValidImages`
 - `ServiceIntegrationTests.EpcParsesHiddenLoginFieldsAndAwardForm`
 - `ServiceIntegrationTests.EpcContinuesPastUnavailableAndInformationalCategories`
