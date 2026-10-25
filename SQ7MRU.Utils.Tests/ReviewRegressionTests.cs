@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
@@ -8,6 +9,19 @@ namespace SQ7MRU.Utils.Tests;
 
 public class ReviewRegressionTests
 {
+    [Theory]
+    [InlineData(Architecture.X64, 0xb0000, 0x20000)]
+    [InlineData(Architecture.Arm64, 0x8c000, 0x8000)]
+    public void LinuxDirectoryFlagsFollowTheTargetKernelAbi(Architecture architecture, int directory, int noFollow)
+    {
+        // Values are the architecture-specific Linux UAPI contract, checked even
+        // on Windows so ARM64 flag regressions do not require an ARM64 test host.
+        var flags = SecureArtifactDirectory.LinuxOpenFlags(architecture);
+        Assert.Equal(directory, flags.Directory);
+        Assert.Equal(noFollow, flags.NoFollow);
+        if (architecture == Architecture.Arm64) Assert.Equal(0, flags.Directory & (1 << 16)); // O_DIRECT
+    }
+
     [Fact]
     public void UnixCreatedFilesAndReopenedIndexLocksHavePrivateWritablePermissions()
     {

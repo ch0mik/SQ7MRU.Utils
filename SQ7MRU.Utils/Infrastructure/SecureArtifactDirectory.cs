@@ -12,8 +12,22 @@ internal sealed class SecureArtifactDirectory : IDisposable
     private readonly string directory;
     private SafeFileHandle Current => handles[^1];
     private int Descriptor => Current.DangerousGetHandle().ToInt32();
-    private static int DirectoryFlags => OperatingSystem.IsMacOS() ? 0x100000 | 0x100 | 0x1000000 : 0x10000 | 0x20000 | 0x80000;
-    private static int NoFollow => OperatingSystem.IsMacOS() ? 0x100 : 0x20000;
+    private static int DirectoryFlags => OperatingSystem.IsMacOS()
+        ? 0x100000 | 0x100 | 0x1000000
+        : LinuxOpenFlags(RuntimeInformation.ProcessArchitecture).Directory;
+    private static int NoFollow => OperatingSystem.IsMacOS()
+        ? 0x100
+        : LinuxOpenFlags(RuntimeInformation.ProcessArchitecture).NoFollow;
+
+    internal static (int Directory, int NoFollow) LinuxOpenFlags(Architecture architecture)
+    {
+        // Linux ARM overrides the asm-generic O_DIRECTORY and O_NOFOLLOW bits.
+        // On ARM64 the x64 O_DIRECTORY bit means O_DIRECT, causing EINVAL on /.
+        var arm = architecture is Architecture.Arm or Architecture.Arm64;
+        var directory = arm ? 1 << 14 : 1 << 16;
+        var noFollow = arm ? 1 << 15 : 1 << 17;
+        return (directory | noFollow | (1 << 19), noFollow); // O_CLOEXEC
+    }
 
     public SecureArtifactDirectory(string path, bool create)
     {

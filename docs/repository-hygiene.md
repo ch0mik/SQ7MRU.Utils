@@ -33,7 +33,7 @@ To investigate an ignore rule without creating sensitive data:
 git check-ignore -v --no-index .env.local cookies.txt downloads/account.adif artifacts/tests/results.trx
 ```
 
-Keep NuGet Trusted Publishing configuration outside source: `NUGET_USER` is a GitHub repository variable and the OIDC trust policy is configured in nuget.org. No API key or session-cookie value belongs in YAML or OpenSpec examples.
+Keep NuGet Trusted Publishing configuration outside source: `NUGET_USER` is a GitHub variable in the `nuget` environment or at repository scope, and the OIDC trust policy is configured in nuget.org. No API key or session-cookie value belongs in YAML or OpenSpec examples.
 
 ## Disposable files
 

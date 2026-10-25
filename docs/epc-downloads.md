@@ -56,6 +56,8 @@ Archives allow 1–128 flat regular certificate entries, at most 32 MiB for the 
 
 ## Verification
 
+Linux directory confinement selects `O_DIRECTORY` and `O_NOFOLLOW` from the running process architecture. Linux ARM64 uses different bits from x64; reusing x64 constants would request direct I/O instead of a directory and can fail before any certificate is saved. The selected no-follow flag applies consistently to traversal, reads, writes and index locks.
+
 Synthetic regression coverage is in `EpcProtocolTests`, `ServiceIntegrationTests.EpcParsesHiddenLoginFieldsAndAwardForm`, `ServiceIntegrationTests.EpcContinuesPastUnavailableAndInformationalCategories`, `ImageArchiveTests` and `PdfStorageTests`. Package-consumer validation also exercises ZIP storage and its native SQLite dependency through the public API.
 
 These tests verify controlled cases rather than every live account or remote page layout. Use synthetic data for additional fixtures; do not commit real certificates, archives, database files, cookies or authenticated HTML.

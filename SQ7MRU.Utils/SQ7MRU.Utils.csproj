@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>SQ7MRU.Utils</PackageId>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <Authors>Pawel Janowski SQ7MRU</Authors>
     <Description>Asynchronous ADIF, eQSL, HRDLog and EPC tools with dependency injection and cancellation.</Description>
     <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>

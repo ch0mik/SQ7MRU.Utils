@@ -8,22 +8,41 @@ Deliver a standalone NuGet library and separate desktop binaries through reprodu
 
 ### Requirement: Multi-platform validation
 
-CI SHALL restore, build and test on Windows, Linux and macOS and install the generated NuGet package into an isolated consumer. Tests SHALL use controlled HTTP responses rather than real service credentials.
+CI SHALL restore, build and test on Windows, Linux and macOS, each on native x64 and ARM64 runners, and install the generated NuGet package into an isolated consumer. Tests SHALL use controlled HTTP responses rather than real service credentials.
 
 #### Scenario: NuGet consumption
 
 - **WHEN** the generated SQ7MRU.Utils package is restored into the smoke-test project
 - **THEN** the consumer resolves public services and runs cancellation and ADIF checks
 - **AND** ZIP certificate storage and the native SQLite dependency execute through the public package API
+- **AND** all three shipped library assemblies are verified as CPU-neutral IL without a 32-bit requirement
 
 ### Requirement: NuGet publishing
 
-A valid v-prefixed SemVer tag SHALL build and verify the package before publishing via nuget.org Trusted Publishing. The publish job SHALL use the nuget environment and an OIDC-issued temporary key; NUGET_USER SHALL be configured externally.
+A valid v-prefixed SemVer tag SHALL produce one platform-neutral package, verify that same artifact on all six native OS/CPU combinations, then publish via nuget.org Trusted Publishing. The publish job SHALL use the nuget environment and an OIDC-issued temporary key; NUGET_USER SHALL be configured externally.
 
 #### Scenario: Package release
 
 - **WHEN** a valid library version tag is pushed and registry trust is configured
 - **THEN** only the verified SQ7MRU.Utils package is pushed to nuget.org
+
+#### Scenario: NuGet platform failure
+
+- **WHEN** package consumption or source tests fail on any of the six native targets
+- **THEN** the NuGet publish job does not run
+- **AND** each target has a distinct test-results artifact
+
+#### Scenario: Single portable package
+
+- **WHEN** the release verification matrix runs
+- **THEN** each job downloads the same candidate package built by the pack job and executes it through an isolated consumer
+- **AND** publishing downloads that candidate artifact rather than rebuilding it or publishing per-RID variants
+
+#### Scenario: Candidate promotion
+
+- **WHEN** the pack job has uploaded its candidate artifact
+- **THEN** verification jobs may consume it, but its existence alone does not authorize publication
+- **AND** the publish job depends on both the pack job and the entire successful verification matrix
 
 #### Scenario: Shared release version
 

@@ -35,10 +35,21 @@ using Microsoft.Extensions.DependencyInjection;
 using SQ7MRU.Utils;
 using SQ7MRU.Utils.Infrastructure;
 using System.IO.Compression;
+using System.Reflection.PortableExecutable;
 
 await using var provider = new ServiceCollection().AddSq7MruUtils().BuildServiceProvider(
     new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
 var service = provider.GetRequiredService<IDownloadService>();
+// All three shipped library assemblies must remain CPU-neutral IL.
+foreach (var assembly in new[] { typeof(IDownloadService).Assembly, typeof(DownloadService).Assembly, typeof(ServiceHttpOptions).Assembly })
+{
+    using var binary = File.OpenRead(assembly.Location);
+    using var pe = new PEReader(binary);
+    var flags = pe.PEHeaders.CorHeader?.Flags ?? 0;
+    if (pe.PEHeaders.CoffHeader.Machine != Machine.I386 ||
+        (flags & CorFlags.ILOnly) == 0 || (flags & CorFlags.Requires32Bit) != 0)
+        throw new Exception("The NuGet library must contain AnyCPU assemblies.");
+}
 _ = provider.GetRequiredService<IEqslAccountService>();
 _ = provider.GetRequiredService<IAdifUploader>();
 _ = provider.GetRequiredService<IArtifactStore>();

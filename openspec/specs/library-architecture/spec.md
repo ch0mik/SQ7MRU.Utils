@@ -15,6 +15,12 @@ The solution SHALL keep transport-independent contracts in Core, download orches
 - **WHEN** a consumer installs SQ7MRU.Utils without the desktop project
 - **THEN** the package includes the Core and Application assemblies and resolves its external dependencies without Avalonia
 
+#### Scenario: Portable package consumer
+
+- **WHEN** a supported Windows, Linux or macOS consumer on x64 or ARM64 installs the library
+- **THEN** the same net10.0 package supplies AnyCPU library assemblies and NuGet resolves the platform-specific native SQLite assets through its dependencies
+- **AND** the library package does not require a desktop executable or a per-RID package variant
+
 ### Requirement: Service registration
 
 AddSq7MruUtils SHALL register download, account-listing and upload services through constructor injection. The scheduler, clock and store SHALL be shared within the service provider. Replaceable ports SHALL use TryAdd registrations.

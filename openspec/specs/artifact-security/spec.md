@@ -31,6 +31,14 @@ The store SHALL normalize the output root, accept a trailing separator and rejec
 - **THEN** the mode argument is passed in its Darwin variadic stack slot, producing owner-only read/write permissions subject to the process umask
 - **AND** the committed certificate can be reopened for writing and the persistent index lock can be acquired again after release
 
+#### Scenario: Linux ARM64 directory flags
+
+- **WHEN** directory confinement runs on Linux ARM64
+- **THEN** native open calls use the ARM64 O_DIRECTORY and O_NOFOLLOW bits, while preserving O_CLOEXEC
+- **AND** the flags follow the running process architecture, independently of the machine that built the portable library
+- **AND** x64 flag values are not reused as ARM64 O_DIRECT or O_LARGEFILE flags
+- **AND** the same architecture-specific no-follow flag is used for directory traversal, certificate reads, temporary writes and SQLite locks
+
 ### Requirement: Image validation limits
 
 The store SHALL identify JPEG, PNG and GIF and decode the image before accepting it. It MUST reject encoded inputs larger than 32 MiB, dimensions above 8192 on either axis, and decoded areas above four million pixels. Saved extensions SHALL match the detected format.
@@ -133,4 +141,5 @@ The store SHALL accept PDFs only for opted-in items and save them with a PDF ext
 - `AdifAndStorageTests.StoresNonJpegCardsWithCorrectExtensionAndFindsThemOnResume`
 - `ReviewRegressionTests.HeldDirectoryCannotBeRedirectedDuringAWrite`
 - `ReviewRegressionTests.UnixCreatedFilesAndReopenedIndexLocksHavePrivateWritablePermissions`
+- `ReviewRegressionTests.LinuxDirectoryFlagsFollowTheTargetKernelAbi`
 - `ReviewRegressionTests.FourByteJpegIsRejectedAndNotAcceptedAsExistingCard`

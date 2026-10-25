@@ -45,7 +45,7 @@ flowchart TD
     Files --> Index[Confined SQLite bundle snapshots]
 ```
 
-The physical NuGet package embeds the Core and Application assemblies. Projects are separated to enforce dependency direction, not to require consumers to install three internal packages. The desktop uses its own composition root. Per-account HTTP sessions own their cookies; the provider-wide scheduler shares service cooldowns and eQSL card-generation reservations.
+One platform-neutral net10.0 NuGet package supplies AnyCPU infrastructure, Core and Application assemblies. Release verification installs the exact same candidate package on all six native Windows/Linux/macOS x64/ARM64 targets before publication, including a native SQLite smoke check. The physical NuGet package embeds the Core and Application assemblies. Projects are separated to enforce dependency direction, not to require consumers to install three internal packages. The desktop uses its own composition root. Per-account HTTP sessions own their cookies; the provider-wide scheduler shares service cooldowns and eQSL card-generation reservations.
 
 EPC discovers categories within the certificate accordion and stores images, PDFs and unpacked ZIP certificates in each group directory. One SQLite database below the selected output root indexes complete bundles. See the [EPC behavior guide](../docs/epc-downloads.md) for output layout, resume semantics, logical progress counts and migration from JSON indexes. See [release notes](../docs/release-notes.md) for the changes from the legacy implementation.
 
@@ -74,6 +74,10 @@ For public repository handling and ignore rules, see [repository hygiene](../doc
 
 ## Validation snapshot
 
-The local Release validation on 2026-10-25 passed 104 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
+NuGet release validation follows `pack → verify (six native targets) → publish`. The candidate is built once and reused for every isolated consumer and the final upload. CPU-neutral assembly checks and native SQLite execution are part of consumer verification; a failed target blocks promotion of the candidate.
+
+Linux ABI flag regression tests check both x64 and ARM64 constants even on a Windows host. They complement the native storage tests; they do not replace executing directory traversal, certificate writes and SQLite locks on the corresponding Linux runners. Runtime architecture selects the flags, so the same AnyCPU package can run on either CPU family.
+
+The local Release validation on 2026-10-25 passed 106 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
 
 The baseline includes EPC PDF certificates, flat extraction of multi-certificate ZIPs, migration from JSON indexes to SQLite, and skipping valid existing certificates and complete indexed bundles. Real account exports, certificates, credentials and private filesystem paths are excluded from documentation examples and versioned fixtures.

@@ -4,7 +4,7 @@ Asynchronous .NET 10 library for ADIF, eQSL.cc, HRDLog/iQSL and EPC. The desktop
 
 ## Library
 
-Install `SQ7MRU.Utils` from nuget.org. The single package includes the Core and Application assemblies; there are no separate internal packages to install and no Avalonia dependency.
+Install `SQ7MRU.Utils` from nuget.org. The single platform-neutral `net10.0` package includes AnyCPU Core, Application and infrastructure assemblies; there are no separate per-RID or internal packages to install and no Avalonia dependency. Native SQLite assets are resolved through NuGet dependencies for the consuming platform.
 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
@@ -82,11 +82,11 @@ Version 2 is a breaking release. Replace `new Downloader(...).Download()`, `new 
 
 Three workflows live in `.github/workflows`:
 
-- `ci.yml`: build and test on Windows, Linux and macOS; pack and install the generated NuGet package into an isolated consumer; retain test results and packages as workflow artifacts.
-- `nuget-release.yml`: a SemVer `v*` tag builds, tests, packs, verifies package consumption and publishes **only SQ7MRU.Utils** to nuget.org. Package version is taken from the tag. Prerelease tags are supported.
+- `ci.yml`: build and test on Windows, Linux and macOS, each on native x64 and ARM64 runners; pack and install the generated NuGet package into an isolated consumer; retain test results and packages as workflow artifacts.
+- `nuget-release.yml`: a SemVer `v*` tag builds one candidate package, verifies that same artifact on all six native OS/CPU targets, then publishes **only SQ7MRU.Utils** to nuget.org if every verification job succeeds. Package version is taken from the tag. Prerelease tags are supported.
 - `desktop-release.yml`: a `v*` tag push or publication of a GitHub Release for that tag builds/tests and produces self-contained archives for `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`, with SHA-256 checksums, then attaches them to a GitHub Release. `workflow_dispatch` produces workflow artifacts without creating a release.
 
-The desktop workflow builds and tests each target on a native runner:
+Desktop builds, CI and NuGet release verification use the following native runner mapping:
 
 | RID | GitHub runner | Release asset |
 | --- | --- | --- |
@@ -96,6 +96,10 @@ The desktop workflow builds and tests each target on a native runner:
 | `linux-arm64` | `ubuntu-24.04-arm` | TAR.GZ + SHA-256 |
 | `osx-x64` | `macos-15-intel` | TAR.GZ + SHA-256 |
 | `osx-arm64` | `macos-latest` | TAR.GZ + SHA-256 |
+
+NuGet release publication uses three stages: `pack` builds one AnyCPU candidate; `verify` downloads and executes that same package on every native target above; `publish` uploads the original candidate only after all verification jobs succeed. The isolated consumer checks all three shipped assemblies for CPU-neutral IL and exercises the native SQLite dependency. A failure on any platform blocks NuGet publication.
+
+The native storage adapter chooses Linux filesystem flags from the running process architecture, so consuming the same portable package on ARM64 does not reuse x64-only flag values. Local ABI regression checks complement the native tests executed by the release matrix.
 
 Archives use `SQ7MRU.Downloader-<version>-<rid>` filenames and separate `desktop-<rid>` workflow artifacts. The release job waits for every matrix build to succeed before attaching assets. A manual run uploads workflow artifacts only. The six-platform matrix is configuration; successful native execution must be confirmed by its GitHub Actions results.
 

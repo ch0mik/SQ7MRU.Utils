@@ -22,6 +22,8 @@ context: |
   shared across sessions for the provider lifetime; honor Retry-After.
   Desktop release RIDs: win-x64, win-arm64, linux-x64, linux-arm64,
   osx-x64, osx-arm64. Build and test each on a native OS/CPU runner.
+  NuGet is one net10.0 AnyCPU package. Verify the same candidate package
+  on all six native OS/CPU targets before publishing; test native SQLite too.
   v* tag pushes publish NuGet and desktop assets for the same version.
   Published release events also update desktop assets for the release tag.
   Preserve existing release text; replace matching assets on rerun.

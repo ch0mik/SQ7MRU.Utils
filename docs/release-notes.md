@@ -1,36 +1,24 @@
 # Release notes
 
-## Release automation
+## Linux ARM64 storage fix
 
-- Release versions are defined by GitHub tags, without hardcoded release numbers in source or documentation. Package metadata, the desktop manifest and HTTP User-Agent derive their versions from the build.
-- Untagged builds use the SDK-evaluated version; package-consumer verification can discover the generated package version automatically.
-- Desktop publishing now runs on `v*` tag pushes and published GitHub Releases. A separate `desktop-v*` tag is no longer required.
-- NuGet publishing continues to run on `v*` tag pushes using Trusted Publishing.
-- Desktop archives and SHA-256 checksums are attached to the release for the same version tag.
-- Existing release titles and descriptions are preserved. Missing releases are created automatically after all desktop builds succeed.
-- Reruns replace matching desktop asset filenames. Desktop runs for the same tag are serialized to avoid concurrent uploads.
-- Manual workflow runs continue to produce workflow artifacts without publishing a release.
+- Corrected architecture-specific Linux directory and no-follow flags, resolving Invalid argument errors that prevented certificate storage and SQLite indexing on ARM64.
+- Native flags are selected from the running process architecture, preserving directory confinement, no-follow behavior and close-on-exec handling.
+- Added regression coverage for the x64 and ARM64 Linux ABI values, including checks that can run on a Windows test host.
 
-## Desktop platforms
+## Cross-platform NuGet validation
 
-Self-contained desktop archives are configured for six targets, each built and tested on a native runner:
-
-- Windows: `win-x64`, `win-arm64`.
-- Linux: `linux-x64`, `linux-arm64`.
-- macOS: `osx-x64`, `osx-arm64`.
-
-Windows distributions use ZIP archives; Linux and macOS distributions use TAR.GZ archives. Every archive has a SHA-256 checksum. macOS distributions remain unsigned.
-
-## Download fixes and improvements
-
-- eQSL card-generation spacing starts at 1 second and increases by 500 ms after each recognized rate-limit response. Learned spacing is shared across sessions until the application restarts; server `Retry-After` instructions remain respected.
-- eQSL rate-limit messages returned with HTTP 403 are handled as rate limits instead of authentication failures.
-- Service waiting times in the UI display fractional seconds.
-- Corrected native file-creation mode passing on macOS ARM64 for writable certificates and reusable SQLite index locks.
+- One platform-neutral net10.0 AnyCPU package supports Windows, Linux and macOS on x64 and ARM64.
+- CI and NuGet release verification cover all six native OS/CPU targets.
+- The release pipeline builds one candidate package, verifies that exact artifact on all six targets, and publishes it only after every verification job succeeds.
+- Isolated consumers check all three shipped DLLs for CPU neutrality and exercise native SQLite through the public API.
+- The verified candidate is published without rebuilding it. A failed target blocks publication.
+- Each verification target has a distinct test-results artifact.
 
 ## Documentation and validation
 
-- Updated README, OpenSpec and release documentation for the six-platform release matrix and shared version tags.
-- The latest local Windows test run passed 104 tests. All eight OpenSpec specifications passed strict validation.
-- Workflow YAML and mocked publication scenarios were checked locally, including existing releases, release creation, creation races, failures and prereleases.
-- Native execution on all six targets must be confirmed by GitHub Actions; local checks do not establish cross-platform success.
+- Updated README, OpenSpec and package-validation documentation.
+- Release versions remain defined by GitHub tags, without concrete release-tag numbers in the repository.
+- The latest local Windows test run passed 106 tests; Release compilation and isolated NuGet consumer verification also passed.
+- All eight OpenSpec specifications passed strict validation.
+- Successful native execution on all six targets must be confirmed by GitHub Actions; local Windows checks do not establish cross-platform success.
