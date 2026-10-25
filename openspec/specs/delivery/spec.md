@@ -165,6 +165,16 @@ Each platform job SHALL hash its finished distribution container with SHA-256. A
 - **THEN** SHA256SUMS contains sorted SHA-256 values and package filenames, excluding itself
 - **AND** manual dispatch retains the same packages and manifest as workflow artifacts without publishing a release
 
+### Requirement: Supported GitHub action runtime
+
+GitHub-provided JavaScript actions SHALL declare a supported runner runtime instead of relying on forced migration from Node.js 20. The current checkout/setup/artifact action releases SHALL target Node.js 24. Updating these actions SHALL preserve the defined trigger, permission and artifact contracts.
+
+#### Scenario: Action runtime upgrade
+
+- **WHEN** checkout, .NET setup or artifact actions are upgraded
+- **THEN** their official manifests declare Node.js 24 and their configured inputs remain supported
+- **AND** CI, tag-based NuGet publishing and release-based desktop delivery keep their existing behavior
+
 ### Requirement: C# repository tooling
 
 Repository checksum and ADIF metadata tooling SHALL use the non-packable C#/.NET SQ7MRU.Build project. Regression tests SHALL run in the existing xUnit suite. Workflows MUST NOT require Python scripts or runtime dependencies.

@@ -1,5 +1,11 @@
 # Release notes
 
+## GitHub Actions runtime
+
+- Upgrade checkout, .NET setup and artifact actions to releases declaring Node.js 24 support.
+- Remove reliance on GitHub's forced Node.js 20-to-24 migration for older action versions.
+- Preserve existing event triggers, platform matrices, artifact layout and publishing permissions.
+
 ## ADIF support and backward compatibility
 
 - Add all 181 QSO fields from the reviewed ADIF specification, with updated XML API descriptions.

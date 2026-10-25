@@ -26,8 +26,8 @@ jobs:
             rid: osx-arm64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
       - run: dotnet restore SQ7MRU.Utils.sln
@@ -37,7 +37,7 @@ jobs:
       - name: Verify NuGet consumer
         shell: pwsh
         run: ./eng/verify-package.ps1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: validation-${{ matrix.rid }}

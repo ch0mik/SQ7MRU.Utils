@@ -107,6 +107,8 @@ The desktop project defaults to self-contained single-file output when a RID is 
 
 Three workflows live in `.github/workflows`:
 
+The workflows use Node.js 24-based GitHub actions: `checkout@v7`, `setup-dotnet@v6`, and `upload-artifact@v7` / `download-artifact@v7`. This is the runner's action runtime; application and repository tools remain C#/.NET. Existing runs keep the action references from their original workflow revision.
+
 - `ci.yml`: build and test on Windows, Linux and macOS, each on native x64 and ARM64 runners; pack and install the generated NuGet package into an isolated consumer; retain test results and packages as workflow artifacts.
 - `nuget-release.yml`: a SemVer `v*` tag builds one candidate package, verifies that same artifact on all six native OS/CPU targets, then publishes **only SQ7MRU.Utils** to nuget.org if every verification job succeeds. Package version is taken from the tag. Prerelease tags are supported.
 - `desktop-release.yml`: publication of a GitHub Release for a `v*` tag builds/tests and produces self-contained single-file executables for `win-x86`, `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `linux-arm`, `osx-x64`, `osx-arm64`. Windows ZIPs, Linux TAR.GZ archives and macOS DMGs are verified and attached to that existing release with a combined `SHA256SUMS`. Tag pushes do not start this workflow. `workflow_dispatch` produces the same packages and manifest as workflow artifacts without creating a release.
