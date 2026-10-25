@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><IsPackable>false</IsPackable><IsTestProject>true</IsTestProject><OutputType>Exe</OutputType><NoWarn>$(NoWarn);xUnit1051</NoWarn></PropertyGroup>
   <ItemGroup>
+    <None Update="Fixtures/*.adi" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" PrivateAssets="all" />
@@ -10,6 +11,7 @@
     <ProjectReference Include="../SQ7MRU.Utils.Core/SQ7MRU.Utils.Core.csproj" />
     <ProjectReference Include="../SQ7MRU.Utils.Application/SQ7MRU.Utils.Application.csproj" />
     <ProjectReference Include="../SQ7MRU.Downloader/SQ7MRU.Downloader.csproj" />
+    <ProjectReference Include="../eng/SQ7MRU.Build/SQ7MRU.Build.csproj" />
     <Using Include="Xunit" />
   </ItemGroup>
 </Project>

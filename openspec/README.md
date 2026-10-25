@@ -29,7 +29,7 @@ openspec show download-workflow --type spec
 openspec validate --all --strict --no-interactive
 ```
 
-For a future behavior change, create a change with `openspec new change <change-name>`, prepare the schema artifacts and spec deltas, implement and test the change, then archive it using the CLI. There is no active change proposal for this baseline: the code already exists.
+For a future behavior change, create a change with `openspec new change <change-name>`, prepare the schema artifacts and spec deltas, implement and test the change, then archive it using the CLI. The completed [align-adif-standard milestone](changes/archive/2026-10-25-align-adif-standard/proposal.md) records the implemented ADI/provider profiles and explicitly excludes optional ADX.
 
 ## Architecture
 
@@ -59,6 +59,8 @@ Desktop publication covers `win-x86`, `win-x64`, `win-arm64`, `linux-x64`, `linu
 
 ## Current limits
 
+The official release rechecked on 2026-10-25 remains ADIF 3.1.8. All 181 QSO fields are modeled with XML descriptions. The implemented document/standard-export APIs preserve values and apply supported grammar/type/export checks; the existing eQSL projection and upload preserve older-provider compatibility. The [audit and implementation notes](../docs/adif-conformance-review.md) distinguish this tested profile from exhaustive external registry/historical/geographic validation. ADX remains optional and unsupported.
+
 Explicit-RID local desktop publishing uses the same self-contained single-file defaults as release builds. Library XML documentation and external PDB files are excluded from desktop output; XML remains available in NuGet. The latest local Windows x64 publication contained exactly one executable. Native execution on the other targets still requires the corresponding CI checks.
 
 - External service pages can change. Integration fixtures are synthetic and do not prove live-account compatibility.
@@ -81,12 +83,14 @@ For public repository handling and ignore rules, see [repository hygiene](../doc
 
 ## Validation snapshot
 
-NuGet release validation follows `pack → verify (six native targets) → publish`. The candidate is built once and reused for every isolated consumer and the final upload. CPU-neutral assembly checks and native SQLite execution are part of consumer verification; a failed target blocks promotion of the candidate.
+NuGet release validation follows `pack â†’ verify (six native targets) â†’ publish`. The candidate is built once and reused for every isolated consumer and the final upload. CPU-neutral assembly checks and native SQLite execution are part of consumer verification; a failed target blocks promotion of the candidate.
 
 Linux ABI flag regression tests check both x64 and ARM64 constants even on a Windows host. They complement the native storage tests; they do not replace executing directory traversal, certificate writes and SQLite locks on the corresponding Linux runners. Runtime architecture selects the flags, so the same AnyCPU package can run on either CPU family.
 
-The local Release validation on 2026-10-25 passed 121 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
+The local Release validation on 2026-10-25 passed 206 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
 
-Desktop packaging changes additionally passed six checksum-promotion tests, YAML/event-boundary checks and PowerShell syntax validation locally. These checks do not execute platform packaging: archive creation and macOS DMG mounting are verified by the corresponding GitHub Actions runners. No local release containers were generated.
+Desktop packaging changes include eight xUnit checksum-promotion tests and three metadata-generator tests, YAML/event-boundary checks and PowerShell syntax validation locally. These checks do not execute platform packaging: archive creation and macOS DMG mounting are verified by the corresponding GitHub Actions runners. No local release containers were generated.
 
 The baseline includes EPC PDF certificates, flat extraction of multi-certificate ZIPs, migration from JSON indexes to SQLite, and skipping valid existing certificates and complete indexed bundles. The latest eQSL integration checks verify that two accounts retain separate ADIF exports in the technical directory and keep images in their existing account folders. Real account exports, certificates, credentials and private filesystem paths are excluded from documentation examples and versioned fixtures.
+
+ADIF validation includes older 1.0/2.2.7/3.0.6 declarations, the original headerless ADIF 1.0 example, Unicode/deprecated eQSL fixtures, byte-identical older uploads, independent current fixtures, culture checks, bounds, relationships, XML field coverage and installed-package metadata checks.

@@ -47,6 +47,8 @@ See [public repository hygiene](docs/repository-hygiene.md) for local data exclu
 
 ## Architecture
 
+ADIF support is based on the [official specification](https://www.adif.org/), reviewed against ADIF 3.1.8 on 2026-10-25. The model covers all 181 QSO fields with XML descriptions. `AdifReader.ReadDocument` and `AdifWriter.Export` preserve field/header data under an explicit profile; `GetAdifRows` keeps the older eQSL-compatible projection. Standard ADI export validates the supported profile and rejects international/import-only content. ADX remains unsupported and optional. See the [audit and implementation notes](docs/adif-conformance-review.md). Standard/provider profiles are separate, and future upgrades must review the official release and tests rather than merely change ADIF_VER.
+
 - `SQ7MRU.Utils.Core`: contracts, requests, results and ports; no HTTP or UI dependencies.
 - `SQ7MRU.Utils.Application`: download use case, bounded concurrency, cancellation and partial-result aggregation.
 - `SQ7MRU.Utils`: HTTP/service and filesystem adapters, ADIF utilities, DI composition and NuGet packaging.
@@ -59,6 +61,8 @@ DI registrations use `TryAdd` so consumers can replace transport/storage ports. 
 ## Build and run
 
 Install .NET 10 SDK (selected by `global.json`).
+
+Repository tooling is C#/.NET too: [SQ7MRU.Build](eng/SQ7MRU.Build/README.md) generates release checksums and reviewed ADIF metadata. Its tests are part of the main test suite, and it is excluded from NuGet packaging. No Python runtime is required or used.
 
 ```sh
 dotnet restore SQ7MRU.Utils.sln
@@ -81,6 +85,8 @@ See the [EPC download guide](docs/epc-downloads.md) for menu discovery, output l
 Version 2 is a breaking release. Replace `new Downloader(...).Download()`, `new iQSL(...).Download()` and `new EPC(...).Download()` with `IDownloadService.DownloadAsync`. Replace `Uploader.UploadAdif` with `IAdifUploader.UploadAsync`. Register services through `AddSq7MruUtils`; use `ServiceException.Kind` and per-file results instead of parsing log messages. Synchronous network APIs and inheritance from `HttpClient` have been removed. DMC support has been removed. ADIF parsing is case-insensitive and length-aware, supports records without a header and rejects truncated records.
 
 Downloaded eQSL ADIF logs are stored in `<output>/<technical-directory>/<callsign>_<QTH>.adif`, alongside the technical SQLite index, rather than among QSL images. An empty QTH omits the suffix. Each export is refreshed; existing exports in the previous location are left untouched.
+
+ADIF maintenance must check the official site for newer released specifications before implementation, review and release preparation, recording available versus implemented support. Latest-standard support is separate from provider compatibility: eQSL may use an older dialect, so its import/upload behavior must retain verified regression coverage rather than being forced to the newest format.
 
 ## Technical directory
 

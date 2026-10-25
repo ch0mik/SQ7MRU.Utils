@@ -1,0 +1,5 @@
+Synthetic ADI fixture authored for parser/export regression tests.
+<ADIF_VER:5>3.1.8
+<USERDEF1:11:N>Count,{0:5}
+<EOH>
+<CALL:5>K1ABC<NAME:0><COUNT:1:N>3<APP_FIXTURE_NOTE:9:S> a<eor>b <MODE:3>PSK<SUBMODE:5>PSK31<QSO_DATE:8>20261025<TIME_ON:4>1234<TX_PWR:1>0<RX_PWR:1>0<EOR>

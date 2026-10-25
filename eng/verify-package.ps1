@@ -91,6 +91,13 @@ _ = provider.GetRequiredService<IArtifactStore>();
 _ = provider.GetRequiredService<IServiceHttpSessionFactory>();
 using var reader = new AdifReader("<CALL:6>SQ7MRU<EOR>");
 if (reader.GetAdifRows().Count != 1) throw new Exception("Parser failed");
+// Prove that the new document API and reviewed embedded catalog work from NuGet.
+using var current = new AdifReader(AdifHelper.ExportAsADIF([new() { CALL = "K1ABC", TX_PWR = "0" }]));
+if (current.ReadDocument().Records.Count != 1 || AdifHelper.FreqToBand(40) != "8m")
+    throw new Exception("Current ADIF profile or embedded metadata failed");
+using var legacy = new AdifReader("<ADIF_VER:5>2.2.7<EOH><CALL:5>K1ABC<MODE:5>PSK31<EOR>");
+if (legacy.GetAdifRows().Count != 1 || !AdifWriter.Export(legacy.ReadDocument(AdifProfile.EqslLegacy), AdifProfile.EqslLegacy).Contains("2.2.7"))
+    throw new Exception("Legacy ADIF compatibility failed");
 using var cts = new CancellationTokenSource(); cts.Cancel();
 try
 {

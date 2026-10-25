@@ -445,6 +445,29 @@ public class ServiceIntegrationTests
         Assert.Equal(1, uploads);
     }
 
+    [Theory]
+    [InlineData("1.00")]
+    [InlineData("2.2.7")]
+    [InlineData("3.0.6")]
+    public async Task EqslUploadPreservesOlderPayloadWithoutVersionOrSemanticUpgrade(string revision)
+    {
+        var original = $"<ADIF_VER:{revision.Length}>{revision}<EOH><CALL:5>K1ABC<MODE:5>PSK31<NAME:6>Łukasz<QSL_RCVD:1>V<EOR>";
+        var uploads = 0;
+        var fixture = new FixtureFactory(async (_, request) =>
+        {
+            if (request.RequestUri!.AbsolutePath.EndsWith("LoginFinish.cfm")) return Html("Welcome");
+            Assert.EndsWith("UploadFile.cfm", request.RequestUri.AbsolutePath);
+            var multipart = Assert.IsType<MultipartFormDataContent>(request.Content);
+            var payload = multipart.Single(part => part.Headers.ContentDisposition?.FileName?.Trim('"') == "UPLOAD.ADIF");
+            Assert.Equal(Encoding.UTF8.GetBytes(original), await payload.ReadAsByteArrayAsync());
+            uploads++;
+            return Html("RESULT=OK");
+        });
+        await using var provider = Provider(fixture);
+        await provider.GetRequiredService<IAdifUploader>().UploadAsync(original, new("TEST", "secret"));
+        Assert.Equal(1, uploads);
+    }
+
     [Fact]
     public async Task AcceptsSuccessfulThirdAccountSelectionResponse()
     {

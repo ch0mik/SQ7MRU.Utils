@@ -8,15 +8,38 @@ Parse and export QSO data while respecting declared field lengths and record bou
 
 ### Requirement: Explicit format reference and compatibility boundaries
 
-Public XML comments and the package README SHALL link to the [ADIF 1.0 specification](https://www.adif.org/100/adif_100.htm), distinguish format rules from library policies and disclose parser/model/export limitations without claiming full schema conformance.
+Public XML comments and READMEs SHALL identify the exact reviewed released ADIF specification from adif.org, distinguish standards rules from application policy, and disclose implemented ADI/ADX and field coverage. ADIF protocol revisions SHALL remain separate from product release tags. Historical ADIF 1.0 SHALL NOT be the primary authority for current ADIF 3 behavior.
+
+#### Scenario: Reference upgrade
+
+- **WHEN** a new official release is adopted
+- **THEN** the reviewed revision, metadata, examples, XML descriptions and conformance fixtures are updated together
+- **AND** the ADIF_VER output is not changed without a verified compatibility profile
 
 #### Scenario: Consumer checks compatibility
 
 - **WHEN** a consumer reads the ADIF API documentation
-- **THEN** the documentation identifies the source specification and limitations without claiming full conformance to every ADIF revision
-- **AND** CALL filtering, trimming, case normalization and dropping unknown fields are identified as library policies
-- **AND** the string-only API, lack of full schema validation and later-revision model fields are disclosed
-- **AND** the exporter's ADIF_VER 3.0.6 tagged header is distinguished from the strict ADIF 1.0 header convention; protocol identifiers are data format versions, not product release tags
+- **THEN** the reviewed specification, supported formats and current limitations are explicit
+- **AND** CALL filtering, trimming and case normalization are identified as compatibility/service policies rather than generic format rules
+
+#### Scenario: Reviewed standard and pending implementation
+
+- **WHEN** ADIF behavior or public descriptions are changed
+- **THEN** the exact reviewed official revision and affected constraints are checked and recorded
+- **AND** documentation distinguishes verified implementation from outstanding conformance work
+
+#### Scenario: New release check
+
+- **WHEN** ADIF implementation, review or release preparation begins
+- **THEN** maintainers check adif.org and its latest-release redirect for a newer released specification
+- **AND** record the date, official URL, released revision, implemented revision and outstanding gaps
+- **AND** a newer release triggers a reviewed update plan and tests rather than an automatic ADIF_VER change
+
+#### Scenario: Provider compatibility boundary
+
+- **WHEN** eQSL data differs from the latest standard profile
+- **THEN** its observed import/upload behavior is documented and tested independently
+- **AND** possible older provider behavior does not redefine the current standard or justify claiming unsupported latest features
 
 ### Requirement: Length-aware parsing
 
@@ -29,29 +52,119 @@ AdifReader SHALL read declared field lengths, match tag names without case sensi
 
 ### Requirement: Malformed records and disposal
 
-The reader SHALL reject invalid field lengths, unterminated tags and CALL-bearing records without EOR. It SHALL observe cancellation during parsing and reject use after disposal.
+The parser SHALL reject invalid field lengths, unterminated tags, invalid marker syntax and unfinished records regardless of CALL. It SHALL expose a documented duplicate-field policy, support cancellation and reject use after disposal. It SHALL distinguish format errors from adapter-specific requirements.
+
+#### Scenario: Unfinished record without CALL
+
+- **WHEN** input ends after a data field without EOR
+- **THEN** strict parsing reports a malformed record even when CALL is absent
 
 #### Scenario: Truncated value
 
 - **WHEN** a declared length exceeds remaining input
 - **THEN** the reader throws FormatException
 
+#### Scenario: Marker with field syntax
+
+- **WHEN** EOR or EOH is supplied with a declared field length
+- **THEN** strict parsing does not accept it as an ordinary terminator
+
 ### Requirement: Normalization and export
 
-The utilities SHALL normalize callsigns to invariant uppercase and bands to invariant lowercase while allowing absent band values. Export SHALL write a header, nonempty string properties as length-prefixed fields and EOR for each row.
+Strict interchange APIs SHALL preserve supported field values and distinguish absent from empty values. ADI export SHALL produce valid header/record framing, use only ADI-permitted fields/types and exclude import-only representations through validated mappings or explicit rejection. Case normalization and CALL filtering SHALL remain explicit service/legacy projection behavior rather than generic parser requirements.
+
+#### Scenario: Valid ADI export
+
+- **WHEN** a document with supported values is exported
+- **THEN** its header starts with a non-tag character, EOH terminates the header, each record ends with EOR and declared lengths match the permitted data
+- **AND** the advertised protocol profile has been validated independently
 
 #### Scenario: Headerless record
 
 - **WHEN** a valid CALL record ends with EOR without an EOH header
-- **THEN** the reader returns the normalized callsign
+- **THEN** parsing accepts the headerless record and the explicit legacy projection retains its normalized-callsign behavior
+
+#### Scenario: Nonrepresentable or deprecated data
+
+- **WHEN** international-only data or an import-only representation cannot be exported through a documented standard replacement
+- **THEN** strict ADI export returns an explicit diagnostic rather than emitting forbidden content or silently dropping it
+
+### Requirement: Latest standard and provider profiles
+
+The library SHALL maintain a reviewed current-standard ADIF profile independently of provider compatibility profiles. eQSL import/upload SHALL use a documented, tested provider profile when older or nonstandard data requires it. New standard support SHALL preserve verified legacy compatibility and SHALL NOT force provider protocol upgrades or silently discard unrepresentable data.
+
+#### Scenario: Standard update with older eQSL dialect
+
+- **WHEN** support for a newer released ADIF revision is implemented
+- **THEN** current-standard conformance fixtures and older eQSL regression fixtures both pass
+- **AND** export to eQSL uses verified provider capabilities rather than assuming the latest revision is accepted
+
+#### Scenario: Unsupported provider conversion
+
+- **WHEN** a provider profile cannot represent supplied data
+- **THEN** conversion returns an explicit diagnostic or uses a documented opt-in mapping instead of silently losing data
+
+### Requirement: Document and extension preservation
+
+The interchange document API SHALL retain header fields, supported QSO fields, exact data, type indicators and legal application/user-defined fields with their definitions. A separately documented legacy projection MAY retain existing service normalization/filtering behavior.
+
+#### Scenario: Lossless extension round trip
+
+- **WHEN** a supported ADI document contains USERDEF definitions, APP fields, empty fields and significant whitespace
+- **THEN** import/export preserves their semantics and values without confusing embedded markers with structure
+
+### Requirement: Reviewed field metadata and validation
+
+Every QSO field in the reviewed official release SHALL have explicit coverage/type metadata and accurate public XML descriptions when exposed. Validation SHALL cover the supported fields' numeric/date/time/character constraints, enumerations, dependencies and import/export eligibility using culture-invariant behavior. Unsupported content SHALL receive explicit diagnostics in strict APIs.
+
+#### Scenario: Profile boundaries
+
+- **WHEN** a consumer selects Standard
+- **THEN** the profile documents decimal precision and its supported local metadata/type checks
+- **AND** it does not claim exhaustive external DARC/county/award membership, historical DXCC validity or geographic locator adjacency checks
+- **AND** callers can choose explicit provider compatibility without losing original field/header values
+
+#### Scenario: Field documentation and validation agree
+
+- **WHEN** a field's accepted range, type, eligibility or dependent status changes
+- **THEN** its metadata, XML comments and independent fixtures change together
+- **AND** raw-string storage is not described as runtime validation
+
+### Requirement: Reviewed band lookup
+
+Frequency-to-band lookup SHALL follow the reviewed ADIF band table, including all listed intervals and their tested boundary behavior. Its documentation SHALL distinguish standard band labels from jurisdiction-specific transmission permissions.
+
+#### Scenario: Previously missing or stale intervals
+
+- **WHEN** lookup receives frequencies in the reviewed 8m, 5m, submm, 2.5mm or 2mm intervals
+- **THEN** the results match reviewed metadata, with regression coverage for endpoints and out-of-range values
+
+### Requirement: Explicit optional ADX scope
+
+Documentation SHALL mark ADX unsupported until a separate implementation passes its own tests. ADI support SHALL NOT be represented as support for ADX international types. Any later ADX implementation SHALL use bounded XML processing, prohibit DTD/external entity resolution and verify the reviewed schema and character rules.
+
+#### Scenario: ADI-only milestone
+
+- **WHEN** only the ADI conformance milestone has been completed
+- **THEN** the public capability statement claims the tested ADI profile without claiming ADX support
 
 ## Implementation references
+
+- [SQ7MRU.Utils/ADIF/AdifDocument.cs](../../../SQ7MRU.Utils/ADIF/AdifDocument.cs)
+- [SQ7MRU.Utils/ADIF/AdifWriter.cs](../../../SQ7MRU.Utils/ADIF/AdifWriter.cs)
+- [SQ7MRU.Utils/ADIF/AdifValidation.cs](../../../SQ7MRU.Utils/ADIF/AdifValidation.cs)
+- [SQ7MRU.Utils/ADIF/adif-metadata.json](../../../SQ7MRU.Utils/ADIF/adif-metadata.json)
+- [eng/SQ7MRU.Build/AdifMetadataGenerator.cs](../../../eng/SQ7MRU.Build/AdifMetadataGenerator.cs)
 
 - [SQ7MRU.Utils/ADIF/AdifReader.cs](../../../SQ7MRU.Utils/ADIF/AdifReader.cs)
 - [SQ7MRU.Utils/ADIF/AdifHelper.cs](../../../SQ7MRU.Utils/ADIF/AdifHelper.cs)
 - [SQ7MRU.Utils/ADIF/AdifRow.cs](../../../SQ7MRU.Utils/ADIF/AdifRow.cs)
 
 ## Verification references
+
+- `AdifConformanceTests`
+- `ServiceIntegrationTests.EqslUploadPreservesOlderPayloadWithoutVersionOrSemanticUpgrade`
+- `eng/verify-package.ps1` current/legacy document APIs and embedded metadata checks
 
 - `AdifAndStorageTests.ReadsCaseInsensitiveTagsWithoutSplittingFieldValues`
 - `AdifAndStorageTests.RejectsTruncatedRecords`

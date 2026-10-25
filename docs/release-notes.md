@@ -1,5 +1,22 @@
 # Release notes
 
+## C# repository tooling
+
+- Replace auxiliary scripts with a non-packable C#/.NET build-tools project for SHA256SUMS and reviewed ADIF metadata generation.
+- Move checksum regression tests into xUnit and add metadata extraction/inventory tests.
+- Remove the Python scripts and workflow dependency; all build-tool tests run with the solution test suite.
+
+## ADIF support and backwards compatibility
+
+- Add all 181 QSO fields from the reviewed ADIF 3.1.8 release and correct public XML descriptions.
+- Add a field-preserving document API and explicit standard/provider compatibility profiles.
+- Correct ADI header framing, Gregorian UTC timestamps, field/type/export restrictions and reviewed band mappings.
+- Validate supported values, USERDEF ranges, APP types, mode/submode and QSL relationships, with bounded parsing and cancellation.
+- Preserve older ADIF import and eQSL behavior. Regression tests cover ADIF 1.0, 2.2.7, 3.0.6 and 3.1.8; eQSL uploads keep original payload bytes and version declarations.
+- Require explicit compatibility export for older/provider declarations and deprecated values. Standard export rejects unsupported data instead of silently dropping it.
+- Check official releases before future ADIF work and release preparation. ADX remains optional and unsupported; external registries and all historical/geographic constraints are outside this profile.
+- Local verification passed 206 tests, installed-NuGet consumption, OpenSpec validation and single-file Windows x64 publication.
+
 ## Desktop distribution packages
 
 - Distribute Windows builds as ZIP archives, Linux builds as TAR.GZ archives preserving executable permissions, and macOS builds as DMG images.
@@ -31,7 +48,7 @@
 ## Documentation and validation
 
 - Update repository and package READMEs, OpenSpec, repository hygiene guidance and generated-artifact ignore rules.
-- Local Windows validation passed 121 .NET tests and six checksum-promotion tests.
+- Local Windows validation passed 206 .NET tests (including checksum-promotion and metadata-generator tests).
 - Workflow YAML/event-boundary checks, PowerShell syntax checks and strict validation of all eight OpenSpec capabilities passed.
 - Actual platform container creation and mounted-DMG checks run on the corresponding GitHub Actions runners; local checks do not establish successful remote execution.
 

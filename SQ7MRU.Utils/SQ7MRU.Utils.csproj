@@ -17,6 +17,7 @@
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeLayers</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="ADIF/adif-metadata.json" />
     <ProjectReference Include="../SQ7MRU.Utils.Core/SQ7MRU.Utils.Core.csproj" PrivateAssets="all" />
     <ProjectReference Include="../SQ7MRU.Utils.Application/SQ7MRU.Utils.Application.csproj" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />

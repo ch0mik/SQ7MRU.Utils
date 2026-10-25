@@ -114,10 +114,11 @@ jobs:
           pattern: desktop-*
           merge-multiple: true
           path: artifacts
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
       - name: Verify packages and generate SHA256SUMS
-        run: |
-          python3 -m unittest discover -s eng -p test_desktop_checksums.py
-          python3 eng/desktop_checksums.py artifacts
+        run: dotnet run --project eng/SQ7MRU.Build/SQ7MRU.Build.csproj -c Release -- checksums artifacts
       - uses: actions/upload-artifact@v4
         with:
           name: release-desktop-packages

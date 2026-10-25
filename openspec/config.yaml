@@ -4,11 +4,33 @@ context: |
   This repository provides SQ7MRU.Utils, a .NET 10 NuGet library, and
   SQ7MRU.Downloader, a separate Avalonia 12 MVVM desktop application.
   Artifacts are written in English; structural headings and SHALL/MUST remain English.
+  Repository application and auxiliary tooling use C#/.NET. Do not add Python
+  scripts, dependencies or workflow steps. Build commands belong in
+  eng/SQ7MRU.Build with regression tests in the existing xUnit project.
   Public API documentation uses adjacent triple-slash XML source comments.
   Ship a library README and XML documentation for all three DLLs in NuGet;
   fail library builds on missing public comments and validate packaged docs.
-  ADIF documentation references the historical ADIF 1.0 specification;
-  distinguish format rules from library policies and later-revision export fields.
+  Official released specifications at https://www.adif.org/ are authoritative
+  for ADIF. The reviewed protocol target is ADIF 3.1.8, not a product tag.
+  Historical ADIF 1.0 is not the primary authority for current ADIF 3 behavior.
+  Check field types, constraints, ADI/ADX eligibility, import-only rules and
+  XML descriptions together against a pinned reviewed revision and fixtures.
+  Never claim conformance by changing ADIF_VER alone. Separate application
+  policies from format rules; full field coverage and ADX are not mandated.
+  Before ADIF implementation, review or release preparation, check adif.org
+  and its latest-release redirect for a newer released specification. Record
+  the check date, official URL, released revision, supported revision and gaps.
+  Review newer releases and extend support with tests; never silently bump
+  a protocol version or claim latest support while implementation is pending.
+  eQSL may use an older ADIF dialect. Keep provider compatibility profiles
+  separate from the latest standard profile, backed by synthetic fixtures.
+  Do not infer eQSL capabilities from the latest standard or force an upgrade
+  on its import/upload paths without verified provider support.
+  See docs/adif-conformance-review.md and the archived align-adif-standard change.
+  AdifRow now covers 181 fields. ReadDocument/AdifWriter preserve document data;
+  GetAdifRows is the backwards-compatible eQSL projection. ADX is unsupported.
+  The strict profile is bounded and not an exhaustive external-registry,
+  historical DXCC or geographic adjacency validator. Document these limits.
   openspec/specs documents the current implementation, not a proposed rewrite.
   Core contains contracts; Application coordinates bounded async download work;
   SQ7MRU.Utils provides service adapters, ADIF utilities, secure storage and DI.
@@ -59,5 +81,6 @@ rules:
     - Use synthetic accounts and data in all examples.
   design:
     - Explain changes to authentication, storage boundaries, cancellation and retries.
+    - For ADIF changes, cite the reviewed official revision and separate ADI, optional ADX, field coverage, format rules and application policy.
   tasks:
     - Keep changes small and validate each functional step with relevant tests.

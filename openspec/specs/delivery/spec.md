@@ -158,6 +158,16 @@ Each platform job SHALL hash its finished distribution container with SHA-256. A
 - **THEN** SHA256SUMS contains sorted SHA-256 values and package filenames, excluding itself
 - **AND** manual dispatch retains the same packages and manifest as workflow artifacts without publishing a release
 
+### Requirement: C# repository tooling
+
+Repository checksum and ADIF metadata tooling SHALL use the non-packable C#/.NET SQ7MRU.Build project. Regression tests SHALL run in the existing xUnit suite. Workflows MUST NOT require Python scripts or runtime dependencies.
+
+#### Scenario: .NET-only tooling
+
+- **WHEN** the desktop workflow aggregates packages or a maintainer regenerates reviewed ADIF metadata
+- **THEN** it invokes SQ7MRU.Build through the .NET SDK
+- **AND** tool failures block the corresponding operation without adding dependencies to the published library
+
 ### Requirement: Public repository hygiene
 
 The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, certificates, runtime SQLite indexes or lock files, legacy JSON indexes, local diagnostic pages, build output or private local configuration. Synthetic source fixtures MAY be versioned explicitly in the test tree.
@@ -175,7 +185,7 @@ The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, 
 - [eng/verify-package.ps1](../../../eng/verify-package.ps1)
 - [eng/package-desktop.ps1](../../../eng/package-desktop.ps1)
 - [eng/render-macos-icon.swift](../../../eng/render-macos-icon.swift)
-- [eng/desktop_checksums.py](../../../eng/desktop_checksums.py)
+- [eng/SQ7MRU.Build/DesktopChecksums.cs](../../../eng/SQ7MRU.Build/DesktopChecksums.cs)
 - [.gitignore](../../../.gitignore)
 - [global.json](../../../global.json)
 - [Directory.Build.props](../../../Directory.Build.props)
@@ -183,6 +193,6 @@ The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, 
 ## Verification references
 
 - `eng/verify-package.ps1`
-- `eng/test_desktop_checksums.py`
+- `DesktopChecksumsTests`
 - `eng/package-desktop.ps1` archive checks and mounted-DMG checks on the corresponding runners
 - `SQ7MRU.Utils.Tests`

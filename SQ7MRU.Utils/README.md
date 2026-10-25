@@ -41,18 +41,36 @@ Keep one provider alive for the application lifetime to share cooldowns and lear
 | `IEqslAccountService.GetAccountsAsync` | Authenticates the primary eQSL login and returns available callsign/QTH accounts. |
 | `IAdifUploader.UploadAsync` | Validates ADIF, authenticates, optionally selects an eQSL account and uploads once; explicit success confirmation is required. |
 | `AdifReader.GetAdifRows` | Synchronously parses length-delimited ADIF fields with cancellation checks; terminated records require CALL to be returned. |
-| `AdifHelper.ExportAsADIF` | Exports string-backed rows with a header and record terminators; does not validate or upload them. |
+| `AdifHelper.ExportAsADIF` | Validates and exports rows under the selected standard/provider profile; does not upload. |
 | `AdifHelper.ConvertToString` | Serializes one row without a file header. |
 | `AdifHelper.FixRecord` | Mutates only callsign/band casing and returns the same record instance. |
-| `AdifHelper.FreqToBand` | Maps MHz to the implemented legacy ADIF band intervals; strict interval endpoints and unmatched values return null. |
+| `AdifHelper.FreqToBand` | Maps MHz to reviewed ADIF band intervals including endpoints; unmatched values return null. |
 
 For eQSL, pass an account from `GetAccountsAsync` through `DownloadRequest.Account`; null means all available accounts. HRDLog requires only a callsign. EPC normalizes the login callsign to uppercase and preserves the supplied password.
 
 ## ADIF reference and compatibility
 
-The [ADIF 1.0 specification](https://www.adif.org/100/adif_100.htm) describes the base physical format: case-insensitive field names, declared lengths, optional type indicators, record markers, zero-length fields and arbitrary field order. The reader accepts these text-format constructs; type indicators are not interpreted.
+The [official ADIF specification](https://www.adif.org/) is authoritative. Metadata was reviewed against [ADIF 3.1.8](https://www.adif.org/318/ADIF_318.htm) on 2026-10-25: 181 QSO properties and 33 band intervals. Protocol revisions are independent of NuGet/product versions.
 
-Library policies differ from the general format: records without a nonblank CALL are omitted, values are trimmed, CALL/BAND casing is normalized, and unknown fields are skipped rather than retained. The string-based API does not handle arbitrary binary payloads or validate the full field schema. The row model contains fields from later revisions too. Export currently declares ADIF_VER 3.0.6 and uses a tagged header; it does not implement the strict ADIF 1.0 header convention. These utilities do not claim full conformance to every ADIF revision.
+- `GetAdifRows()` preserves the provider-compatible API: older/tagged headers, legacy modes/statuses, Unicode provider data, CALL filtering, trimming and CALL/BAND casing. It does not apply the latest semantic rules to eQSL. Duplicate fields project their last value; the document API retains all occurrences in compatibility mode.
+- `ReadDocument(AdifProfile.Standard)` preserves exact field values, empty fields, header metadata and extensions. It accepts older declared revisions and import-only enum values, while enforcing supported ADI grammar/types. It rejects duplicate fields as an explicit strict-profile policy. It does not require CALL.
+- `AdifWriter.Export(document)` enforces reviewed current export eligibility. It rejects international fields, deprecated representations, unknown unregistered fields and invalid values instead of silently losing data. Existing older ADIF_VER declarations are not upgraded: use explicit compatibility export to preserve them.
+- `AdifWriter.Export(document, AdifProfile.EqslLegacy)` preserves older/provider metadata and values without claiming current conformance. eQSL upload uses the original caller bytes after compatibility parsing; no version or semantic upgrade is applied.
+- `AdifHelper.ExportAsADIF(rows)` now writes a valid header, the reviewed protocol revision, invariant Gregorian UTC timestamp and nonempty records. The explicit `EqslLegacy` overload retains the earlier helper's protocol declaration. Null properties are omitted; empty strings remain fields. Empty documents/records fail explicitly.
+
+```csharp
+using var reader = new AdifReader(text);
+var document = reader.ReadDocument(AdifProfile.EqslLegacy);
+var preserved = AdifWriter.Export(document, AdifProfile.EqslLegacy);
+```
+
+The strict profile checks ASCII/CRLF rules, supported number precision, dates/times, numeric ranges, catalog enumerations, known mode/submode relations, USERDEF constraints, APP type consistency, grid extensions, QSL dates/statuses and reviewed primary subdivisions. It is not an exhaustive validator of external DARC/county/award registries, all historical DXCC dates or geographic locator adjacency. Such raw values remain modeled; callers needing those external checks must supply them. Numeric validation uses decimal precision and rejects larger values with a diagnostic. Unknown imported fields are retained, but standard export requires legal APP/USERDEF declarations. No arbitrary text between fields is retained, and XML/ADX is not parsed.
+
+Limits: 32 Ã— 1024 Ã— 1024 input/output string characters, 100,000 fields per document and 4,096 fields per header/record. Parsing is synchronous CPU work with cancellation checks. Malformed tags and incomplete records fail even without CALL. The field model itself stores raw strings and does not validate property assignment.
+
+`FreqToBand` uses the reviewed table including endpoints, 8m, 5m, submm and corrected microwave ranges. Band labels do not imply local permission to transmit.
+
+Before ADIF implementation, review and release preparation, maintainers check for new official releases and record available versus implemented support. New standards must preserve tested older-provider compatibility. ADX is optional and remains outside this ADI milestone. See [the review](https://github.com/ch0mik/SQ7MRU.Utils/blob/master/docs/adif-conformance-review.md).
 
 ## Results, cancellation and errors
 
@@ -84,7 +102,7 @@ Valid existing certificates are skipped; ADIF exports and explicitly refresh-mar
 
 Paths are confined to the output root and untrusted symbolic links/junctions are rejected. Files use atomic replacement. A ZIP is validated before certificate writes and its SQLite index is committed last; the whole bundle is not one filesystem transaction.
 
-Images are decoded with a 32 MiB encoded limit, 8192 pixels per axis and a four-million-pixel area limit. Opted-in PDFs receive bounded structural checks, not rendering or active-content sanitization. Archives permit 1–128 flat regular certificate entries, at most 32 MiB compressed/per entry and 64 MiB expanded in total.
+Images are decoded with a 32 MiB encoded limit, 8192 pixels per axis and a four-million-pixel area limit. Opted-in PDFs receive bounded structural checks, not rendering or active-content sanitization. Archives permit 1Ã¢â‚¬â€œ128 flat regular certificate entries, at most 32 MiB compressed/per entry and 64 MiB expanded in total.
 
 ## Transport and extension points
 
