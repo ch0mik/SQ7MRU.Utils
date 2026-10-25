@@ -1,0 +1,35 @@
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: dotnet restore SQ7MRU.Utils.sln
+      - run: dotnet build SQ7MRU.Utils.sln -c Release --no-restore
+      - run: dotnet test SQ7MRU.Utils.sln -c Release --no-build --logger trx --results-directory artifacts/tests
+      - run: dotnet pack SQ7MRU.Utils/SQ7MRU.Utils.csproj -c Release --no-build -o artifacts/nuget
+      - name: Verify NuGet consumer
+        shell: pwsh
+        run: ./eng/verify-package.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-${{ matrix.os }}
+          path: |
+            artifacts/tests/**
+            artifacts/nuget/*
+          if-no-files-found: error

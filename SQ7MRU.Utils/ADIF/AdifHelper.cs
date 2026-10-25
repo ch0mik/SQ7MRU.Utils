@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using System.Text;
 
@@ -47,7 +47,7 @@ namespace SQ7MRU.Utils
         /// </summary>
         /// <param name="freq"></param>
         /// <returns></returns>
-        public static string FreqToBand(double freq)
+        public static string? FreqToBand(double freq)
         {
             if (freq > 0.1357 && freq < 0.1378)
             {
@@ -182,8 +182,8 @@ namespace SQ7MRU.Utils
             //ENUM Parse
             //HRD Log - wrong Mode 
 
-                row.BAND = row.BAND.ToLower();
-                row.CALL = row.CALL.ToUpper();
+                row.BAND = row.BAND?.ToLowerInvariant();
+                row.CALL = row.CALL?.ToUpperInvariant();
 
             return row;
         }

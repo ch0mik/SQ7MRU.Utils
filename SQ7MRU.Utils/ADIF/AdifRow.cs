@@ -1,4 +1,5 @@
-﻿namespace SQ7MRU.Utils
+#nullable disable
+namespace SQ7MRU.Utils
 {
     /// <summary>
     /// Class contains QSO Fields v3.0.6 ADIF

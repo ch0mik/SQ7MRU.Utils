@@ -1,33 +1,33 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-  <TargetFrameworks>net9.0</TargetFrameworks>
-    <OutputTypeEx>library</OutputTypeEx>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Description>Utils to parse ADIF files and downloads the eQSLs from eqsl.cc and hrdlog.net or awards from EPC (epc-mc.eu) and DMC (www.digital-modes-club.org)</Description>
     <PackageId>SQ7MRU.Utils</PackageId>
-	<Authors>Pawel Janowski SQ7MRU</Authors>
-    <Company>HamRadio</Company>
-    <Version>1.2.5</Version>
-  <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
-  <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
-  <!-- Use SPDX expression for Apache-2.0 to satisfy modern NuGet metadata (replaces deprecated PackageLicenseUrl) -->
-  <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Copyright>SQ7MRU (C) 2025</Copyright>
-    <AssemblyVersion>1.2.5.0</AssemblyVersion>
-    <FileVersion>1.2.5.0</FileVersion>
-    <RepositoryType>C#</RepositoryType>
-    <PackageTags>HamRadio, eQSL, ADIF, EPC, DMC, HRD, Digital Modes Club</PackageTags>
-	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Pawel Janowski SQ7MRU</Authors>
+    <Description>Asynchronous ADIF, eQSL, HRDLog and EPC tools with dependency injection and cancellation.</Description>
+    <PackageProjectUrl>https://github.com/ch0mik/SQ7MRU.Utils</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ch0mik/SQ7MRU.Utils</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>HamRadio;ADIF;eQSL;EPC;HRDLog</PackageTags>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeLayers</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
-  </ItemGroup>
-  
-  <ItemGroup>
+    <ProjectReference Include="../SQ7MRU.Utils.Core/SQ7MRU.Utils.Core.csproj" PrivateAssets="all" />
+    <ProjectReference Include="../SQ7MRU.Utils.Application/SQ7MRU.Utils.Application.csproj" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="StbImageSharp" Version="2.30.16" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <None Include="../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
-
+  <Target Name="IncludeLayers">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Core.dll" />
+      <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Application.dll" />
+    </ItemGroup>
+  </Target>
 </Project>

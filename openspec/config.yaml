@@ -1,0 +1,30 @@
+schema: spec-driven
+
+context: |
+  This repository provides SQ7MRU.Utils, a .NET 10 NuGet library, and
+  SQ7MRU.Downloader, a separate Avalonia 12 MVVM desktop application.
+  Artifacts are written in English; structural headings and SHALL/MUST remain English.
+  openspec/specs documents the current implementation, not a proposed rewrite.
+  Core contains contracts; Application coordinates bounded async download work;
+  SQ7MRU.Utils provides service adapters, ADIF utilities, secure storage and DI.
+  Services: eQSL, HRDLog/iQSL, EPC. DMC has been removed.
+  EPC discovers the certificate accordion dynamically, stores image/PDF certificates
+  and safely unpacks ZIP bundles directly into the group directory.
+  One confined SQLite index records completed bundles; validated existing files
+  and complete bundles are skipped. Counters represent logical selections.
+  Legacy JSON bundle indexes migrate after certificate validation.
+  Preserve cancellation, cookie isolation, bounded retries, sanitized errors,
+  directory-relative/no-follow storage and eQSL rate limiting.
+  No real credentials, cookies, account logs or downloaded cards belong in Git.
+  Desktop and NuGet publication are handled by separate GitHub Actions workflows.
+  Do not create local release ZIP files as part of development.
+
+rules:
+  specs:
+    - Describe implemented behavior and identify known limitations explicitly.
+    - Include WHEN/THEN scenarios and links to source and existing tests.
+    - Use synthetic accounts and data in all examples.
+  design:
+    - Explain changes to authentication, storage boundaries, cancellation and retries.
+  tasks:
+    - Keep changes small and validate each functional step with relevant tests.

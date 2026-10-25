@@ -1,0 +1,94 @@
+name: Publish desktop
+on:
+  push:
+    tags: ['desktop-v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: macos-15-intel
+            rid: osx-x64
+          - os: macos-latest
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Read version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if ($env:REF_TYPE -eq 'tag') {
+            if ($env:RELEASE_TAG -notmatch '^desktop-v(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)$') { throw 'Invalid desktop tag' }
+            "value=$($Matches[1])" >> $env:GITHUB_OUTPUT
+          } else { 'value=2.0.0' >> $env:GITHUB_OUTPUT }
+      - run: dotnet build SQ7MRU.Utils.sln -c Release
+      - run: dotnet test SQ7MRU.Utils.sln -c Release --no-build
+      - name: Publish desktop
+        run: >-
+          dotnet publish SQ7MRU.Downloader/SQ7MRU.Downloader.csproj
+          -c Release -r ${{ matrix.rid }} --self-contained true
+          -p:Version=${{ steps.version.outputs.value }}
+          -p:PublishSingleFile=false -p:PublishTrimmed=false
+          -o artifacts/publish
+      - name: Archive release files
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+          RELEASE_RID: ${{ matrix.rid }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $name = "SQ7MRU.Downloader-$env:RELEASE_VERSION-$env:RELEASE_RID"
+          if ($IsWindows) {
+            $archive = "artifacts/$name.zip"
+            Compress-Archive -Path artifacts/publish/* -DestinationPath $archive
+          } else {
+            $archive = "artifacts/$name.tar.gz"
+            tar -czf $archive -C artifacts/publish .
+            if ($LASTEXITCODE -ne 0) { throw 'Archive creation failed' }
+          }
+          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath "$archive.sha256" -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.rid }}
+          path: |
+            artifacts/*.zip
+            artifacts/*.tar.gz
+            artifacts/*.sha256
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: artifacts
+      - name: Attach archives to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          args=()
+          if [[ "$RELEASE_TAG" == *-*.*.*-* ]]; then args+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" artifacts/* --verify-tag --title "SQ7MRU Downloader ${RELEASE_TAG#desktop-v}" --generate-notes "${args[@]}"

@@ -1,0 +1,61 @@
+name: Publish NuGet
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Read version
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)$') { throw 'Invalid release tag' }
+          "value=$($Matches[1])" >> $env:GITHUB_OUTPUT
+      - run: dotnet restore SQ7MRU.Utils.sln
+      - run: dotnet build SQ7MRU.Utils.sln -c Release --no-restore -p:Version=${{ steps.version.outputs.value }}
+      - run: dotnet test SQ7MRU.Utils.sln -c Release --no-build --logger trx --results-directory artifacts/tests
+      - run: dotnet pack SQ7MRU.Utils/SQ7MRU.Utils.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.value }} -o artifacts/nuget
+      - shell: pwsh
+        run: ./eng/verify-package.ps1 -Version '${{ steps.version.outputs.value }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-release
+          path: artifacts/nuget/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nuget-test-results
+          path: artifacts/tests/**
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: nuget
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/download-artifact@v4
+        with:
+          name: nuget-release
+          path: artifacts/nuget
+      - uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Push verified package to nuget.org
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push 'artifacts/nuget/*.nupkg' --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json

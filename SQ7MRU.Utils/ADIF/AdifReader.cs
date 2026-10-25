@@ -1,103 +1,46 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Globalization;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
-namespace SQ7MRU.Utils
+namespace SQ7MRU.Utils;
+
+/// <summary>Length-aware reader; field values may contain line breaks or angle brackets.</summary>
+public sealed class AdifReader(string adifContent) : IDisposable
 {
-    public class AdifReader : IDisposable
+    private static readonly IReadOnlyDictionary<string, PropertyInfo> Properties = typeof(AdifRow).GetProperties()
+        .Where(p => p.CanWrite && p.PropertyType == typeof(string)).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
+    private string? content = adifContent ?? throw new ArgumentNullException(nameof(adifContent));
+    public bool IsDisposed => content is null;
+    public List<AdifRow> GetAdifRows(CancellationToken cancellationToken = default)
     {
-        public  bool IsDisposed { get; protected set; }
-        public bool isInitialized;
-        private List<AdifRow> adifRows;
-        private ILoggerFactory loggerFactory = new LoggerFactory();
-        private string adif;
-
-        public AdifReader(string adifContent)
+        ObjectDisposedException.ThrowIf(IsDisposed, this);
+        var text = content!;
+        var rows = new List<AdifRow>();
+        var row = new AdifRow();
+        var hasFields = false;
+        for (var position = 0; position < text.Length;)
         {
-            adif = adifContent;
-            isInitialized = true;
-        }
-
-        public List<AdifRow> GetAdifRows()
-        {
-            string[] rawrecords = AdifRecords();
-            adifRows = new List<AdifRow>();
-
-            foreach (string record in rawrecords)
+            cancellationToken.ThrowIfCancellationRequested();
+            var open = text.IndexOf('<', position);
+            if (open < 0) break;
+            var close = text.IndexOf('>', open + 1);
+            if (close < 0) throw new FormatException("Unterminated ADIF tag.");
+            var tag = text[(open + 1)..close].Split(':');
+            position = close + 1;
+            if (tag[0].Equals("EOH", StringComparison.OrdinalIgnoreCase))
+            { row = new(); hasFields = false; continue; }
+            if (tag[0].Equals("EOR", StringComparison.OrdinalIgnoreCase))
             {
-                AdifRow AdifRow = new AdifRow();
-
-                string[] x = Regex.Split(record.Replace("\n", "").Replace("\r", ""), @"<([^:]+):\d+[^>]*>").ToArray();
-                List<string> l = new List<string>(x);
-                l.RemoveAt(0);
-                x = l.ToArray();
-
-                var dic = new Dictionary<string, string>();
-                if (x.Length % 2 == 0)
-                {
-                    for (int i = 0; i < x.Length; i++)
-                    {
-                        dic.Add(x[i].ToUpper(), x[i + 1]);
-                        i++;
-                    }
-
-                    var props = typeof(AdifRow).GetRuntimeProperties();
-
-                    foreach (PropertyInfo prp in props)
-                    {
-                        if (dic.ContainsKey(prp.Name))
-                        {
-                            PropertyInfo pi = typeof(AdifRow).GetRuntimeProperty(prp.Name);
-                            pi.SetValue(AdifRow, dic[prp.Name]?.Trim(), null);
-                        }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(AdifRow.CALL))
-                {
-                    adifRows.Add(AdifHelper.FixRecord(AdifRow));
-                }
+                if (!string.IsNullOrWhiteSpace(row.CALL)) rows.Add(AdifHelper.FixRecord(row));
+                row = new(); hasFields = false; continue;
             }
-
-            return adifRows;
+            if (tag.Length < 2 || !int.TryParse(tag[1], NumberStyles.None, CultureInfo.InvariantCulture, out var length)
+                || length > text.Length - position) throw new FormatException("Invalid ADIF field length.");
+            if (Properties.TryGetValue(tag[0], out var property)) property.SetValue(row, text.Substring(position, length).Trim());
+            position += length;
+            hasFields = true;
         }
-
-        private string[] AdifRecords()
-        {
-            if (adif.Contains("<EOH>"))
-            {
-                string[] RawRecords = adif?.Split(new string[] { "<EOH>" }, StringSplitOptions.RemoveEmptyEntries)[1]?.Split(new string[] { "<EOR>" }, StringSplitOptions.RemoveEmptyEntries);
-                return RawRecords;
-            }
-            else
-            {
-                return new string[0];
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!IsDisposed)
-            {
-                if (disposing)
-                {
-                    adifRows = null;
-                    adif = null;
-                }
-                isInitialized = false;
-                IsDisposed = true;
-            }
-        }
+        if (hasFields && !string.IsNullOrWhiteSpace(row.CALL)) throw new FormatException("ADIF record is missing EOR.");
+        return rows;
     }
-
+    public void Dispose() => content = null;
 }

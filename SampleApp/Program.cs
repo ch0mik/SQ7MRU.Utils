@@ -1,100 +1,25 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using SQ7MRU.Utils;
-using System;
 
-namespace SampleApp
+if (args.Length < 3 || !Enum.TryParse<QslService>(args[0], true, out var service))
 {
-    internal class Program
-    {
-        private static void Main(string[] args)
-        {
-            ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.AddConsole().SetMinimumLevel(LogLevel.Trace);
-            });
-
-            //eQSL.cc
-            eQSL_Example(loggerFactory);
-
-            //EPC : EPC-MC.eu
-            EPC_Example(loggerFactory);
-
-            //DMC : www.digital-modes-club.org
-            DMC_Example(loggerFactory);
-
-            //HRD : hrdlog.net
-            HRD_Example(loggerFactory);
-        }
-
-        private static void eQSL_Example(ILoggerFactory loggerFactory)
-        {
-            Console.WriteLine("SQ7MRU eQSL Downloader\n");
-            Console.WriteLine("Enter Login to eqsl.cc : ");
-            string login = Console.ReadLine();
-            string password = ReadPassword("Enter Password : ");
-            Console.WriteLine("\nWorking...\n");
-            var eqsl = new Downloader(login, password, loggerFactory, null, 5, 1000, 10);
-            eqsl.Download(); //Download ADIFs and e-QSLs
-        }
-
-        private static void EPC_Example(ILoggerFactory loggerFactory)
-        {
-            Console.WriteLine("SQ7MRU EPC Downloader\n");
-            Console.WriteLine("Enter Login to epc-mc.eu : ");
-            string login = Console.ReadLine();
-            string password = ReadPassword("Enter Password : ");
-            Console.WriteLine("\nWorking...\n");
-            var epc = new EPC(login, password, loggerFactory, null);
-            epc.Download(); //Download certs
-        }
-
-        private static void DMC_Example(ILoggerFactory loggerFactory)
-        {
-            Console.WriteLine("SQ7MRU DMC Downloader\n");
-            Console.WriteLine("Enter Login to www.digital-modes-club.org : ");
-            string login = Console.ReadLine();
-            string password = ReadPassword("Enter Password : ");
-            Console.WriteLine("\nWorking...\n");
-            var dmc = new DMC(login, password, loggerFactory, null);
-            dmc.Download(); //Download certs
-        }
-
-        private static void HRD_Example(ILoggerFactory loggerFactory)
-        {
-            Console.WriteLine("SQ7MRU iQSL Downloader\n");
-            Console.WriteLine("Enter Login to hrdlog.net : ");
-            string login = Console.ReadLine();
-            Console.WriteLine("\nWorking...\n");
-            var iQSL = new iQSL(login, loggerFactory, null);
-            iQSL.Download(); //Download iQSLs
-        }
-
-        private static string ReadPassword(string message)
-        {
-            Console.WriteLine(message);
-            string password = "";
-            while (true)
-            {
-                ConsoleKeyInfo key = Console.ReadKey(true);
-                switch (key.Key)
-                {
-                    case ConsoleKey.Escape:
-                        return null;
-
-                    case ConsoleKey.Enter:
-                        return password;
-
-                    case ConsoleKey.Backspace:
-                        password = password.Substring(0, (password.Length - 1));
-                        Console.Write("\b \b");
-                        break;
-
-                    default:
-                        password += key.KeyChar;
-                        Console.Write("*");
-                        break;
-                }
-            }
-        }
-    }
+    Console.WriteLine("Usage: SampleApp <Eqsl|HrdLog|Epc> <login> <output-directory>");
+    Console.WriteLine("Set SQ7MRU_PASSWORD for services requiring authentication.");
+    return 2;
 }
+using var cancellation = new CancellationTokenSource();
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; cancellation.Cancel(); };
+await using var provider = new ServiceCollection().AddSq7MruUtils().BuildServiceProvider();
+try
+{
+    var result = await provider.GetRequiredService<IDownloadService>().DownloadAsync(
+        new(service, new(args[1], Environment.GetEnvironmentVariable("SQ7MRU_PASSWORD")), args[2]),
+        new Progress<DownloadProgress>(p => Console.WriteLine($"{p.Stage}: {p.Completed}/{p.Total} {p.Message}")), cancellation.Token);
+    Console.WriteLine($"Downloaded: {result.Downloaded}; skipped: {result.Skipped}; failed: {result.Failed}");
+    foreach (var item in result.Items.Where(x => x.Status == ItemStatus.Failed)) Console.WriteLine($"{item.Name}: {item.Failure} - {item.Message}");
+    return result.Failed > 0 ? 1 : 0;
+}
+catch (OperationCanceledException) { Console.WriteLine("Cancelled."); return 130; }
+catch (ServiceException ex) { Console.Error.WriteLine($"{ex.Kind}: {ex.Message}"); return 1; }
+catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or FormatException)
+{ Console.Error.WriteLine("Cannot complete the operation. Check configuration, output directory and service response format."); return 1; }

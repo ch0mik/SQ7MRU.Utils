@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><IsPackable>false</IsPackable>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <ProjectReference Include="../SQ7MRU.Utils/SQ7MRU.Utils.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SQ7MRU.Utils.Core\SQ7MRU.Utils.Core.csproj" />
+    <ProjectReference Include="..\SQ7MRU.Utils.Application\SQ7MRU.Utils.Application.csproj" />
+  </ItemGroup>
+</Project>

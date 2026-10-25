@@ -1,0 +1,50 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:SQ7MRU.Downloader" xmlns:utils="clr-namespace:SQ7MRU.Utils;assembly=SQ7MRU.Utils.Core"
+        x:Class="SQ7MRU.Downloader.MainWindow" x:DataType="local:MainViewModel"
+        Title="SQ7MRU Downloader" Width="940" Height="760" MinWidth="720" MinHeight="620">
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="28" RowSpacing="20">
+    <StackPanel Spacing="5">
+      <TextBlock Text="SQ7MRU Downloader" FontSize="28" FontWeight="SemiBold" />
+      <TextBlock Text="QSL cards and awards in one place" Opacity="0.7" />
+    </StackPanel>
+    <Border Grid.Row="1" Padding="20" CornerRadius="10" Background="#192332">
+      <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="16" IsEnabled="{Binding !IsBusy}">
+        <TextBlock Text="Service" VerticalAlignment="Center" />
+        <ComboBox Grid.Column="1" ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}" HorizontalAlignment="Stretch" />
+        <TextBlock Grid.Row="1" Text="Login / callsign" VerticalAlignment="Center" />
+        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Login}" PlaceholderText="SQ7MRU" />
+        <TextBlock Grid.Row="2" Text="Password" VerticalAlignment="Center" />
+        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Password}" PasswordChar="●" PlaceholderText="HRDLog does not require a password" />
+        <TextBlock Grid.Row="3" Text="Output directory" VerticalAlignment="Center" />
+        <Grid Grid.Row="3" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <TextBox Text="{Binding OutputDirectory}" /><Button Grid.Column="1" Content="Browse…" Click="ChooseDirectory" />
+        </Grid>
+        <TextBlock Grid.Row="4" Text="eQSL account / QTH" VerticalAlignment="Center" />
+        <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+          <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate><DataTemplate x:DataType="utils:ServiceAccount"><StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="{Binding CallSign}" /><TextBlock Text="{Binding Qth}" />
+            </StackPanel></DataTemplate></ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1" Content="Load accounts" Command="{Binding LoadAccountsCommand}" />
+        </Grid>
+      </Grid>
+    </Border>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12">
+      <Button Content="Start download" Command="{Binding DownloadCommand}" /><Button Content="Cancel" Command="{Binding CancelCommand}" />
+    </StackPanel>
+    <StackPanel Grid.Row="3" Spacing="10">
+      <ProgressBar Minimum="0" Maximum="{Binding ProgressMaximum}" Value="{Binding ProgressValue}" Height="6" />
+      <TextBlock Text="{Binding Status}" TextWrapping="Wrap" />
+    </StackPanel>
+    <ListBox x:Name="ResultsList" Grid.Row="4" ItemsSource="{Binding Results}">
+      <ListBox.ItemTemplate><DataTemplate x:DataType="utils:ItemResult">
+        <StackPanel Spacing="3" Margin="4"><TextBlock Text="{Binding Name}" TextWrapping="Wrap" />
+          <StackPanel Orientation="Horizontal" Spacing="12"><TextBlock Text="{Binding Status}" /><TextBlock Text="{Binding Message}" TextWrapping="Wrap" /></StackPanel>
+        </StackPanel>
+      </DataTemplate></ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</Window>
+
+
