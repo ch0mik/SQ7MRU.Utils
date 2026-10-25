@@ -1,7 +1,27 @@
 [CmdletBinding()]
-param([string]$PackageDirectory = './artifacts/nuget', [string]$Version = '2.0.0')
+param([string]$PackageDirectory = './artifacts/nuget', [string]$Version)
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath $PackageDirectory).Path
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $versions = @(foreach ($package in Get-ChildItem -LiteralPath $source -Filter '*.nupkg' -File) {
+        $archive = [IO.Compression.ZipFile]::OpenRead($package.FullName)
+        try {
+            foreach ($entry in $archive.Entries | Where-Object FullName -like '*.nuspec') {
+                $reader = [IO.StreamReader]::new($entry.Open())
+                try {
+                    [xml]$spec = $reader.ReadToEnd()
+                    if ($spec.package.metadata.id -eq 'SQ7MRU.Utils') { [string]$spec.package.metadata.version }
+                }
+                finally { $reader.Dispose() }
+            }
+        }
+        finally { $archive.Dispose() }
+    })
+    if ($versions.Count -ne 1) { throw 'Expected exactly one SQ7MRU.Utils package; pass -Version to select explicitly.' }
+    $Version = $versions[0]
+}
+if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$') { throw 'Invalid package version' }
 $work = Join-Path $PSScriptRoot "../artifacts/package-smoke/$([Guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 @"

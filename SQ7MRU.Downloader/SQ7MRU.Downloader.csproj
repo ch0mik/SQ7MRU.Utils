@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><IsPackable>false</IsPackable>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
@@ -14,4 +13,14 @@
     <ProjectReference Include="..\SQ7MRU.Utils.Core\SQ7MRU.Utils.Core.csproj" />
     <ProjectReference Include="..\SQ7MRU.Utils.Application\SQ7MRU.Utils.Application.csproj" />
   </ItemGroup>
+  <Target Name="GenerateVersionedApplicationManifest" BeforeTargets="PrepareForBuild" DependsOnTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <ApplicationManifest>$(IntermediateOutputPath)app.manifest</ApplicationManifest>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/app.manifest" DestinationFiles="$(ApplicationManifest)" />
+    <XmlPoke XmlInputPath="$(ApplicationManifest)"
+             Query="/*[local-name()='assembly']/*[local-name()='assemblyIdentity']/@version"
+             Value="$(AssemblyVersion)" />
+  </Target>
 </Project>

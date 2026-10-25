@@ -29,7 +29,8 @@ public sealed class ServiceHttpSessionFactory(IOptions<ServiceHttpOptions> optio
     {
         var handler = new HttpClientHandler { UseCookies = true, CookieContainer = new CookieContainer(), AutomaticDecompression = DecompressionMethods.All, AllowAutoRedirect = false };
         var client = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan, MaxResponseContentBufferSize = 32 * 1024 * 1024 };
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("SQ7MRU.Utils/2.0");
+        var version = typeof(ServiceHttpSessionFactory).Assembly.GetName().Version?.ToString(3) ?? "unknown";
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"SQ7MRU.Utils/{version}");
         return new(client, service, options.Value, scheduler, clock, progress);
     }
 }

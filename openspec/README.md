@@ -2,6 +2,8 @@
 
 This is an as-built specification of the current source tree, established on 2026-10-25 with OpenSpec 1.15.0. It describes existing behavior rather than proposing a new implementation.
 
+Release versions are defined by tags on GitHub, without a fixed release version in source or documentation. Library and desktop publication derive the version from the same tag. Untagged builds use the SDK-evaluated version; package verification reads generated package metadata unless explicitly supplied.
+
 ## Capabilities
 
 | Capability | Scope |
@@ -46,6 +48,10 @@ flowchart TD
 The physical NuGet package embeds the Core and Application assemblies. Projects are separated to enforce dependency direction, not to require consumers to install three internal packages. The desktop uses its own composition root. Per-account HTTP sessions own their cookies; the provider-wide scheduler shares service cooldowns and eQSL card-generation reservations.
 
 EPC discovers categories within the certificate accordion and stores images, PDFs and unpacked ZIP certificates in each group directory. One SQLite database below the selected output root indexes complete bundles. See the [EPC behavior guide](../docs/epc-downloads.md) for output layout, resume semantics, logical progress counts and migration from JSON indexes. See [release notes](../docs/release-notes.md) for the changes from the legacy implementation.
+
+eQSL generation pacing starts at one second and increases by 500 milliseconds after each recognized rate-limit response. The learned interval is shared for the service provider lifetime; successful responses do not reduce it, and server-requested cooldowns still apply.
+
+Desktop publication covers `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64` and `osx-arm64`, with matching native runners, separate archives and SHA-256 files. The [README publishing section](../README.md#publishing) lists the runner mapping. Library and desktop publishing use the same `v*` tags. Desktop assets are also updated when a release is published; manual desktop runs produce workflow artifacts without a GitHub Release.
 
 ## Current limits
 

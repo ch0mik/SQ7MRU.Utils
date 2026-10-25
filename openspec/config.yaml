@@ -17,6 +17,15 @@ context: |
   directory-relative/no-follow storage and eQSL rate limiting.
   No real credentials, cookies, account logs or downloaded cards belong in Git.
   Desktop and NuGet publication are handled by separate GitHub Actions workflows.
+  Release versions come exclusively from GitHub tags; never hardcode a specific release tag in source or documentation.
+  eQSL pacing starts at 1 second and grows by 500 ms per rate-limit response,
+  shared across sessions for the provider lifetime; honor Retry-After.
+  Desktop release RIDs: win-x64, win-arm64, linux-x64, linux-arm64,
+  osx-x64, osx-arm64. Build and test each on a native OS/CPU runner.
+  v* tag pushes publish NuGet and desktop assets for the same version.
+  Published release events also update desktop assets for the release tag.
+  Preserve existing release text; replace matching assets on rerun.
+  Manual desktop runs upload artifacts only and use the SDK-evaluated version.
   Do not create local release ZIP files as part of development.
 
 rules:

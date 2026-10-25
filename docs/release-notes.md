@@ -1,42 +1,36 @@
-# SQ7MRU.Utils 2.0.0 / SQ7MRU.Downloader 2.0.0
+# Release notes
 
-This release introduces a .NET 10 library and a separate Avalonia desktop downloader, with asynchronous service integrations, resumable downloads and GitHub Actions release workflows.
+## Release automation
 
-## Highlights
+- Release versions are defined by GitHub tags, without hardcoded release numbers in source or documentation. Package metadata, the desktop manifest and HTTP User-Agent derive their versions from the build.
+- Untagged builds use the SDK-evaluated version; package-consumer verification can discover the generated package version automatically.
+- Desktop publishing now runs on `v*` tag pushes and published GitHub Releases. A separate `desktop-v*` tag is no longer required.
+- NuGet publishing continues to run on `v*` tag pushes using Trusted Publishing.
+- Desktop archives and SHA-256 checksums are attached to the release for the same version tag.
+- Existing release titles and descriptions are preserved. Missing releases are created automatically after all desktop builds succeed.
+- Reruns replace matching desktop asset filenames. Desktop runs for the same tag are serialized to avoid concurrent uploads.
+- Manual workflow runs continue to produce workflow artifacts without publishing a release.
 
-- Separate `SQ7MRU.Downloader` desktop application with an English UI, eQSL account/QTH selection, directory picker, cancellation and live results displayed newest first.
-- Standalone `SQ7MRU.Utils` NuGet package with dependency injection, cancellation tokens, bounded concurrency and per-item download results. The library has no Avalonia dependency.
-- Isolated cookie sessions, bounded retries, shared service cooldowns, `Retry-After` handling and paced eQSL card generation.
-- Adaptive eQSL generation spacing starts at 1 second and increases by 500 ms after each rate-limit response, while respecting server-requested waits.
-- Updated eQSL authentication, linked-account switching and ADIF export/download handling.
-- Dynamic EPC category discovery within the certificate accordion, including membership and contest certificates, without a fixed category list.
-- EPC JPEG, PNG, GIF and PDF certificates, plus automatic extraction of certificate ZIP responses into the group directory.
-- A technical SQLite index for completed EPC bundles. Valid existing certificates and complete bundles are skipped; missing or corrupt files are downloaded again.
-- Confined output paths, rejection of symbolic links and junctions, bounded content validation and atomic file replacement.
-- Correct native file-creation mode passing on macOS ARM64, preserving private writable certificates and reusable SQLite locks.
-- Improved ADIF parsing with case-insensitive tags, length-aware fields, invariant normalization and cancellation checks.
-- OpenSpec documentation of implemented architecture, service behavior, security boundaries and delivery workflows.
+## Desktop platforms
 
-## Breaking changes
+Self-contained desktop archives are configured for six targets, each built and tested on a native runner:
 
-- .NET 10 is required for library consumers and local development.
-- Replace the synchronous `Downloader`, `EPC`, `iQSL` and `Uploader` classes with `IDownloadService`, `IEqslAccountService` and `IAdifUploader`, registered through `AddSq7MruUtils`.
-- DMC support has been removed.
-- Local `build-publish-multi.*` scripts have been removed. Desktop and NuGet publishing use separate GitHub Actions workflows.
+- Windows: `win-x64`, `win-arm64`.
+- Linux: `linux-x64`, `linux-arm64`.
+- macOS: `osx-x64`, `osx-arm64`.
 
-## Download behavior
+Windows distributions use ZIP archives; Linux and macOS distributions use TAR.GZ archives. Every archive has a SHA-256 checksum. macOS distributions remain unsigned.
 
-- Existing valid certificates are reused. ADIF exports are refreshed on every run.
-- EPC archives are unpacked directly into `<output>/EPC/<login>/<group>/`; downloaded ZIPs are not retained.
-- Progress counts logical download selections. One ZIP selection may contain several certificate files.
-- Bundle metadata is stored in `<output>/.sq7mru/downloads.sqlite`; older JSON indexes are migrated after certificate validation.
-- An already complete EPC bundle is not downloaded again to check for remote additions. Missing local bundle members trigger a new download.
-- PDF acceptance uses structural checks; documents are not rendered or sanitized.
+## Download fixes and improvements
 
-## Delivery and validation
+- eQSL card-generation spacing starts at 1 second and increases by 500 ms after each recognized rate-limit response. Learned spacing is shared across sessions until the application restarts; server `Retry-After` instructions remain respected.
+- eQSL rate-limit messages returned with HTTP 403 are handled as rate limits instead of authentication failures.
+- Service waiting times in the UI display fractional seconds.
+- Corrected native file-creation mode passing on macOS ARM64 for writable certificates and reusable SQLite index locks.
 
-- Local verification passed: 104 tests, a Release build without warnings, isolated NuGet consumption, and strict validation of all eight OpenSpec specifications.
-- CI is configured to build and test on Windows, Linux and macOS, including isolated NuGet package consumption with SQLite.
-- NuGet releases use `v*` tags and Trusted Publishing; desktop releases use `desktop-v*` tags and provide platform archives with SHA-256 checksums.
-- Desktop targets are Windows x64, Linux x64, macOS x64 and macOS ARM64. macOS distributions are unsigned; signing, notarization and installers are not included.
-- Authenticated service pages can change. Automated integration tests use synthetic responses and do not guarantee every live-account flow.
+## Documentation and validation
+
+- Updated README, OpenSpec and release documentation for the six-platform release matrix and shared version tags.
+- The latest local Windows test run passed 104 tests. All eight OpenSpec specifications passed strict validation.
+- Workflow YAML and mocked publication scenarios were checked locally, including existing releases, release creation, creation races, failures and prereleases.
+- Native execution on all six targets must be confirmed by GitHub Actions; local checks do not establish cross-platform success.

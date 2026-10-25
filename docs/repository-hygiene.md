@@ -16,6 +16,8 @@ Synthetic standalone ADIF fixtures may be added under `SQ7MRU.Utils.Tests/Fixtur
 
 ## Before committing
 
+Keep release notes and specifications independent of concrete release-tag numbers. Define the release version on GitHub; do not update a hardcoded project or workflow version for each release. Dependency, SDK and protocol versions serve separate purposes and remain explicitly configured where required.
+
 ```sh
 git status --short --untracked-files=all
 git diff --cached --check

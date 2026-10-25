@@ -1,4 +1,4 @@
-# SQ7MRU.Utils 2
+# SQ7MRU.Utils
 
 Asynchronous .NET 10 library for ADIF, eQSL.cc, HRDLog/iQSL and EPC. The desktop application is a separate project: **SQ7MRU.Downloader** (Avalonia 12, MVVM).
 
@@ -83,15 +83,32 @@ Version 2 is a breaking release. Replace `new Downloader(...).Download()`, `new 
 Three workflows live in `.github/workflows`:
 
 - `ci.yml`: build and test on Windows, Linux and macOS; pack and install the generated NuGet package into an isolated consumer; retain test results and packages as workflow artifacts.
-- `nuget-release.yml`: tag `v2.0.0` (or another SemVer `v*` tag) builds, tests, packs, verifies package consumption and publishes **only SQ7MRU.Utils** to nuget.org. Package version is taken from the tag. Also supports prerelease versions such as `v2.1.0-rc.1`.
-- `desktop-release.yml`: tag `desktop-v2.0.0` builds/tests and produces self-contained archives for `win-x64`, `linux-x64`, `osx-x64`, `osx-arm64`, with SHA-256 checksums, then attaches them to a GitHub Release. `workflow_dispatch` produces workflow artifacts without creating a release.
+- `nuget-release.yml`: a SemVer `v*` tag builds, tests, packs, verifies package consumption and publishes **only SQ7MRU.Utils** to nuget.org. Package version is taken from the tag. Prerelease tags are supported.
+- `desktop-release.yml`: a `v*` tag push or publication of a GitHub Release for that tag builds/tests and produces self-contained archives for `win-x64`, `win-arm64`, `linux-x64`, `linux-arm64`, `osx-x64`, `osx-arm64`, with SHA-256 checksums, then attaches them to a GitHub Release. `workflow_dispatch` produces workflow artifacts without creating a release.
 
-Before the first NuGet release:
+The desktop workflow builds and tests each target on a native runner:
+
+| RID | GitHub runner | Release asset |
+| --- | --- | --- |
+| `win-x64` | `windows-latest` | ZIP + SHA-256 |
+| `win-arm64` | `windows-11-arm` | ZIP + SHA-256 |
+| `linux-x64` | `ubuntu-latest` | TAR.GZ + SHA-256 |
+| `linux-arm64` | `ubuntu-24.04-arm` | TAR.GZ + SHA-256 |
+| `osx-x64` | `macos-15-intel` | TAR.GZ + SHA-256 |
+| `osx-arm64` | `macos-latest` | TAR.GZ + SHA-256 |
+
+Archives use `SQ7MRU.Downloader-<version>-<rid>` filenames and separate `desktop-<rid>` workflow artifacts. The release job waits for every matrix build to succeed before attaching assets. A manual run uploads workflow artifacts only. The six-platform matrix is configuration; successful native execution must be confirmed by its GitHub Actions results.
+
+Create a version tag on GitHub to start NuGet and desktop publishing. Publishing a GitHub Release for a `v*` tag also starts desktop publishing. Existing release titles and notes are preserved; otherwise the desktop job creates the release. Reruns replace matching desktop asset filenames, and desktop runs for the same tag are serialized. The workflow version must be committed and available on the relevant tag; rerunning an old workflow run does not pick up newer YAML changes.
+
+Release versions are maintained on GitHub, without concrete tag numbers in source or documentation. The workflows pass the tag-derived version to MSBuild; the desktop manifest and HTTP User-Agent use the generated assembly version. Untagged builds use the SDK-evaluated version, and package-consumer verification discovers the generated package version from its metadata when no version is supplied.
+
+Before the first NuGet release, configure Trusted Publishing:
 
 1. Create a nuget.org Trusted Publishing policy for owner `ch0mik`, repository `SQ7MRU.Utils`, workflow filename `nuget-release.yml`, environment `nuget` and package scope `SQ7MRU.Utils`.
 2. Set repository variable `NUGET_USER` to the nuget.org profile name that owns/can publish the package.
 3. Configure the GitHub environment `nuget` to allow the intended release tags. The workflow uses `NuGet/login@v1` and GitHub OIDC; no long-lived NuGet API key is required.
-4. Push the intended version tag after reviewing the changes. Local builds never publish to nuget.org.
+4. Commit and push the reviewed source and workflow changes, then create the intended version tag on GitHub. Local builds never publish to nuget.org.
 
 See [NuGet Trusted Publishing](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing).
 

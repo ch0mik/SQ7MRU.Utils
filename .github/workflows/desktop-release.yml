@@ -1,20 +1,37 @@
 name: Publish desktop
 on:
   push:
-    tags: ['desktop-v*']
+    tags: ['v*']
+  release:
+    types: [published]
   workflow_dispatch:
+concurrency:
+  group: desktop-release-${{ github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
   build:
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     strategy:
       fail-fast: false
       matrix:
+        rid:
+          - win-x64
+          - win-arm64
+          - linux-x64
+          - linux-arm64
+          - osx-x64
+          - osx-arm64
         include:
           - os: windows-latest
             rid: win-x64
+          - os: windows-11-arm
+            rid: win-arm64
           - os: ubuntu-latest
             rid: linux-x64
+          - os: ubuntu-24.04-arm
+            rid: linux-arm64
           - os: macos-15-intel
             rid: osx-x64
           - os: macos-latest
@@ -22,6 +39,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.ref }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -29,13 +48,18 @@ jobs:
         id: version
         shell: pwsh
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          if ($env:REF_TYPE -eq 'tag') {
-            if ($env:RELEASE_TAG -notmatch '^desktop-v(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)$') { throw 'Invalid desktop tag' }
+          if ($env:REF_TYPE -eq 'tag' -or $env:EVENT_NAME -eq 'release') {
+            if ($env:RELEASE_TAG -notmatch '^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?)$') { throw 'Invalid release tag' }
             "value=$($Matches[1])" >> $env:GITHUB_OUTPUT
-          } else { 'value=2.0.0' >> $env:GITHUB_OUTPUT }
+          } else {
+            $version = dotnet msbuild SQ7MRU.Downloader/SQ7MRU.Downloader.csproj -getProperty:Version
+            if ($LASTEXITCODE -ne 0) { throw 'Cannot read local build version' }
+            "value=$($version.Trim())" >> $env:GITHUB_OUTPUT
+          }
       - run: dotnet build SQ7MRU.Utils.sln -c Release
       - run: dotnet test SQ7MRU.Utils.sln -c Release --no-build
       - name: Publish desktop
@@ -72,7 +96,7 @@ jobs:
             artifacts/*.sha256
           if-no-files-found: error
   release:
-    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    if: github.event_name != 'workflow_dispatch' && startsWith(github.event.release.tag_name || github.ref_name, 'v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -87,8 +111,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
-          args=()
-          if [[ "$RELEASE_TAG" == *-*.*.*-* ]]; then args+=(--prerelease); fi
-          gh release create "$RELEASE_TAG" artifacts/* --verify-tag --title "SQ7MRU Downloader ${RELEASE_TAG#desktop-v}" --generate-notes "${args[@]}"
+          set -euo pipefail
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            args=()
+            if [[ "${RELEASE_TAG#v}" == *-* ]]; then args+=(--prerelease); fi
+            if ! gh release create "$RELEASE_TAG" --verify-tag --title "SQ7MRU ${RELEASE_TAG#v}" --generate-notes "${args[@]}"; then
+              # Another actor may have created the release after our initial check.
+              gh release view "$RELEASE_TAG" >/dev/null
+            fi
+          fi
+          gh release upload "$RELEASE_TAG" artifacts/* --clobber
