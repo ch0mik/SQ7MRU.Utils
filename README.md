@@ -101,6 +101,8 @@ Library consumers configure `ArtifactStorageOptions.TechnicalDirectoryName` thro
 
 ## Publishing
 
+Linux release prerequisites are listed in [Linux runtime requirements](docs/linux-runtime-requirements.md), including the exact Ubuntu 24.04 packages and the X11/XWayland requirement. The .NET runtime is bundled; system C/C++, font, TLS and display libraries remain distribution-provided.
+
 The desktop project defaults to self-contained single-file output when a RID is specified, following [Microsoft's single-file deployment guidance](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview?tabs=cli). For example, `dotnet publish SQ7MRU.Downloader/SQ7MRU.Downloader.csproj -c Release -r win-x64 -o artifacts/desktop-win-x64` produces one executable containing the .NET runtime and native package libraries. API documentation XML files remain in NuGet and are excluded from desktop publish output.
 
 Three workflows live in `.github/workflows`:

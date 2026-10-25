@@ -59,6 +59,8 @@ Desktop publication covers `win-x86`, `win-x64`, `win-arm64`, `linux-x64`, `linu
 
 ## Current limits
 
+Linux system prerequisites are documented in the [runtime requirements guide](../docs/linux-runtime-requirements.md). It separates the bundled .NET runtime from native GUI/C dependencies, identifies an Ubuntu 24.04 package set, and documents the current X11/XWayland configuration without claiming native Wayland or every-distribution validation.
+
 The official release rechecked on 2026-10-25 remains ADIF 3.1.8. All 181 QSO fields are modeled with XML descriptions. The implemented document/standard-export APIs preserve values and apply supported grammar/type/export checks; the existing eQSL projection and upload preserve older-provider compatibility. The [audit and implementation notes](../docs/adif-conformance-review.md) distinguish this tested profile from exhaustive external registry/historical/geographic validation. ADX remains optional and unsupported.
 
 Explicit-RID local desktop publishing uses the same self-contained single-file defaults as release builds. Library XML documentation and external PDB files are excluded from desktop output; XML remains available in NuGet. The latest local Windows x64 publication contained exactly one executable. Native execution on the other targets still requires the corresponding CI checks.

@@ -56,6 +56,9 @@ context: |
   32-bit targets are cross-published with source tests on their 64-bit host.
   Desktop assets contain one self-contained executable with native libraries
   bundled for self-extraction. No installed .NET runtime is needed.
+  Document Linux system dependencies explicitly with official sources and
+  distribution-specific package names; do not imply bundled .NET includes
+  OS C/C++, ICU, TLS, font or X11 libraries. The current GUI uses X11/XWayland.
   Explicit-RID desktop publishes default to this mode in the project itself.
   Exclude library API XML and external PDB files from desktop output;
   keep the XML documentation in NuGet and fail on extra desktop publish files.

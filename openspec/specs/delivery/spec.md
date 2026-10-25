@@ -120,6 +120,13 @@ Desktop publication SHALL produce one executable per RID with the .NET runtime a
 - **AND** any extra publish-output file fails that job and prevents release asset upload
 - **AND** library API XML documentation remains packaged in NuGet but is excluded from desktop output
 
+#### Scenario: Linux system prerequisites
+
+- **WHEN** a desktop release is used on Linux
+- **THEN** documentation distinguishes bundled .NET from required system libraries and the graphical session
+- **AND** it provides an explicitly scoped Ubuntu 24.04 package list with official sources and notes that other distributions need different package versions
+- **AND** the current backend is identified as X11, with XWayland required in a Wayland session
+
 #### Scenario: Local publish with a target runtime
 
 - **WHEN** the desktop project is published with an explicit RID using `dotnet publish -c Release -r <rid>`
@@ -189,6 +196,7 @@ The repository MUST NOT contain live credentials, cookies, downloaded QSO logs, 
 - [.gitignore](../../../.gitignore)
 - [global.json](../../../global.json)
 - [Directory.Build.props](../../../Directory.Build.props)
+- [docs/linux-runtime-requirements.md](../../../docs/linux-runtime-requirements.md)
 
 ## Verification references
 
