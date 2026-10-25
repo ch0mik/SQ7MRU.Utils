@@ -12,7 +12,7 @@ public sealed class ServiceHttpOptions
     public TimeSpan OperationTimeout { get; set; } = TimeSpan.FromMinutes(5);
     public TimeSpan BaseDelay { get; set; } = TimeSpan.FromSeconds(2);
     public TimeSpan MaxDelay { get; set; } = TimeSpan.FromMinutes(1);
-    public TimeSpan EqslCardInterval { get; set; } = TimeSpan.FromSeconds(12);
+    public TimeSpan EqslCardInterval { get; set; } = TimeSpan.FromSeconds(1);
     public TimeSpan MinimumRequestInterval { get; set; } = TimeSpan.FromMilliseconds(500);
 }
 
@@ -41,12 +41,29 @@ public sealed class ServiceRequestScheduler(TimeProvider clock) : IDisposable
         public readonly SemaphoreSlim Gate = new(1, 1);
         public DateTimeOffset Next;
         public DateTimeOffset NextCard;
+        public DateTimeOffset? LastCard;
+        public TimeSpan CardInterval;
     }
     private readonly ConcurrentDictionary<QslService, State> states = new();
 
     public Task WaitAsync(QslService service, TimeSpan interval, CancellationToken token) => WaitCoreAsync(service, false, interval, token);
-    public Task WaitForCardAsync(TimeSpan interval, CancellationToken token) => WaitCoreAsync(QslService.Eqsl, true, interval, token);
-    private async Task WaitCoreAsync(QslService service, bool card, TimeSpan interval, CancellationToken token)
+    public Task WaitForCardAsync(TimeSpan interval, CancellationToken token, IProgress<DownloadProgress>? progress = null) =>
+        WaitCoreAsync(QslService.Eqsl, true, interval, token, progress);
+
+    public async Task IncreaseEqslCardIntervalAsync(TimeSpan initialInterval, CancellationToken token)
+    {
+        var state = states.GetOrAdd(QslService.Eqsl, _ => new());
+        await state.Gate.WaitAsync(token).ConfigureAwait(false);
+        try
+        {
+            state.CardInterval = (state.CardInterval > initialInterval ? state.CardInterval : initialInterval) + TimeSpan.FromMilliseconds(500);
+            if (state.LastCard is { } lastCard) state.NextCard = lastCard + state.CardInterval;
+        }
+        finally { state.Gate.Release(); }
+    }
+
+    private async Task WaitCoreAsync(QslService service, bool card, TimeSpan interval, CancellationToken token,
+        IProgress<DownloadProgress>? progress = null)
     {
         var state = states.GetOrAdd(service, _ => new());
         while (true)
@@ -55,16 +72,26 @@ public sealed class ServiceRequestScheduler(TimeProvider clock) : IDisposable
             await state.Gate.WaitAsync(token).ConfigureAwait(false);
             try
             {
+                if (card && interval > state.CardInterval)
+                {
+                    state.CardInterval = interval;
+                    if (state.LastCard is { } lastCard) state.NextCard = lastCard + state.CardInterval;
+                }
                 var next = card && state.NextCard > state.Next ? state.NextCard : state.Next;
                 wait = next - clock.GetUtcNow();
                 if (wait <= TimeSpan.Zero)
                 {
-                    if (card) state.NextCard = clock.GetUtcNow() + interval;
+                    if (card)
+                    {
+                        state.LastCard = clock.GetUtcNow();
+                        state.NextCard = state.LastCard.Value + state.CardInterval;
+                    }
                     else state.Next = clock.GetUtcNow() + interval;
                     return;
                 }
             }
             finally { state.Gate.Release(); }
+            progress?.Report(new(ProgressStage.WaitingForService, "Waiting for eQSL card generation pacing.", RetryAfter: wait));
             await Task.Delay(wait, clock, token).ConfigureAwait(false);
         }
     }
@@ -143,7 +170,7 @@ public sealed class ServiceHttpSession(HttpClient client, QslService service, Se
                     var limited = response.StatusCode == HttpStatusCode.TooManyRequests ||
                         head.Contains("Too many queries", StringComparison.OrdinalIgnoreCase) ||
                         head.Contains("rate limit exceeded", StringComparison.OrdinalIgnoreCase);
-                    if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                    if (!limited && response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
                         throw new ServiceException(FailureKind.Authentication, $"Service authentication was rejected ({RequestDescription(response)}).");
                     if (limited || response.StatusCode is HttpStatusCode.RequestTimeout or HttpStatusCode.InternalServerError
                         or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable or HttpStatusCode.GatewayTimeout)
@@ -165,6 +192,8 @@ public sealed class ServiceHttpSession(HttpClient client, QslService service, Se
                 catch (OperationCanceledException) when (!linked.IsCancellationRequested) { failure = FailureKind.Timeout; }
 
                 // Share the cooldown even if this request cannot safely be replayed.
+                if (service == QslService.Eqsl && failure == FailureKind.RateLimited)
+                    await scheduler.IncreaseEqslCardIntervalAsync(options.EqslCardInterval, linked.Token).ConfigureAwait(false);
                 await scheduler.DeferAsync(service, delay, linked.Token).ConfigureAwait(false);
                 if (!retrySafe || attempt >= options.MaxRetries)
                     throw new ServiceException(failure, "Service request failed; retry limit reached or replay is unsafe.");
@@ -189,9 +218,7 @@ public sealed class ServiceHttpSession(HttpClient client, QslService service, Se
             if (service == QslService.Eqsl && request.RequestUri is { } uri &&
                 (uri.AbsolutePath.EndsWith("/DisplayeQSL.cfm", StringComparison.OrdinalIgnoreCase) || uri.AbsolutePath.EndsWith("/GeteQSL.cfm", StringComparison.OrdinalIgnoreCase)))
             {
-                if (options.EqslCardInterval > TimeSpan.Zero)
-                    progress?.Report(new(ProgressStage.WaitingForService, "Waiting for the eQSL card generation interval.", RetryAfter: options.EqslCardInterval));
-                await scheduler.WaitForCardAsync(options.EqslCardInterval, token).ConfigureAwait(false);
+                await scheduler.WaitForCardAsync(options.EqslCardInterval, token, progress).ConfigureAwait(false);
             }
             var response = await client.SendAsync(request, HttpCompletionOption.ResponseContentRead, token).ConfigureAwait(false);
             response.RequestMessage ??= request;

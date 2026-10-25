@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
             "Concurrency settings must be between 1 and 32 for supported services.");
         services.AddOptions<ServiceHttpOptions>().Validate(o => o.MaxRetries is >= 0 and <= 20 &&
             o.RequestTimeout > TimeSpan.Zero && o.OperationTimeout >= o.RequestTimeout &&
-            o.EqslCardInterval >= TimeSpan.FromSeconds(11) && o.BaseDelay > TimeSpan.Zero && o.MaxDelay >= o.BaseDelay && o.MinimumRequestInterval >= TimeSpan.Zero,
+            o.EqslCardInterval >= TimeSpan.FromSeconds(1) && o.BaseDelay > TimeSpan.Zero && o.MaxDelay >= o.BaseDelay && o.MinimumRequestInterval >= TimeSpan.Zero,
             "HTTP timeouts, delays and retry count are invalid.");
         if (configureDownloads is not null) services.Configure(configureDownloads);
         if (configureHttp is not null) services.Configure(configureHttp);

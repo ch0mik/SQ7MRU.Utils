@@ -25,6 +25,12 @@ The store SHALL normalize the output root, accept a trailing separator and rejec
 - **WHEN** a valid output directory ends in a path separator
 - **THEN** the store accepts the directory
 
+#### Scenario: macOS ARM64 file creation
+
+- **WHEN** native openat creates a temporary certificate or index lock on macOS ARM64
+- **THEN** the mode argument is passed in its Darwin variadic stack slot, producing owner-only read/write permissions subject to the process umask
+- **AND** the committed certificate can be reopened for writing and the persistent index lock can be acquired again after release
+
 ### Requirement: Image validation limits
 
 The store SHALL identify JPEG, PNG and GIF and decode the image before accepting it. It MUST reject encoded inputs larger than 32 MiB, dimensions above 8192 on either axis, and decoded areas above four million pixels. Saved extensions SHALL match the detected format.
@@ -126,4 +132,5 @@ The store SHALL accept PDFs only for opted-in items and save them with a PDF ext
 - `AdifAndStorageTests.RejectsDirectoryLinksBeforeReadingOrWriting`
 - `AdifAndStorageTests.StoresNonJpegCardsWithCorrectExtensionAndFindsThemOnResume`
 - `ReviewRegressionTests.HeldDirectoryCannotBeRedirectedDuringAWrite`
+- `ReviewRegressionTests.UnixCreatedFilesAndReopenedIndexLocksHavePrivateWritablePermissions`
 - `ReviewRegressionTests.FourByteJpegIsRejectedAndNotAcceptedAsExistingCard`

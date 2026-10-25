@@ -45,12 +45,26 @@ The default attempt timeout SHALL be 60 seconds and the logical request budget S
 
 ### Requirement: eQSL generation pacing
 
-The shared scheduler SHALL reserve eQSL card-generation requests at a default interval of 12 seconds across sessions and retries. DI option validation SHALL require at least 11 seconds. General requests SHALL default to a 500 millisecond minimum interval.
+The shared scheduler SHALL start eQSL generation spacing at one second and increase it by 500 milliseconds for each recognized eQSL rate-limit response. Learned spacing SHALL be shared across sessions and retries for the scheduler lifetime. DI SHALL require an initial interval of at least one second. General requests SHALL default to a 500 millisecond minimum interval.
 
 #### Scenario: Shared generation interval
 
 - **WHEN** two sessions request eQSL card generation
 - **THEN** the second request waits for the shared generation reservation
+
+#### Scenario: Repeated rate limits
+
+- **WHEN** eQSL responds with HTTP 429 or a recognized rate-limit message
+- **THEN** generation spacing increases from 1 to 1.5 seconds, then 2 seconds for the next such response, extending existing reservations
+- **AND** successful responses do not reset the learned interval; other transient errors do not increase it
+- **AND** server Retry-After and the shared retry cooldown still apply and are never shortened by generation pacing
+
+#### Scenario: Scheduler lifetime
+
+- **WHEN** another download uses the same service provider
+- **THEN** it retains the learned generation spacing
+- **WHEN** the application creates a new provider and scheduler
+- **THEN** generation spacing starts again at the configured initial interval
 
 ### Requirement: Sanitized error context
 
@@ -74,3 +88,5 @@ HTTP error messages SHALL identify the method and final endpoint path without qu
 - `TransportTests.NotFoundIdentifiesFinalEndpointWithoutLeakingQueryParameters`
 - `CookieSessionTests.CookieContainerKeepsSeedAndRedirectCookiesForSubsequentRequests`
 - `ReviewRegressionTests.CardGenerationIntervalIsSharedAcrossSessionsAndCancellable`
+- `ReviewRegressionTests.RepeatedRateLimitsAddHalfASecondAndExtendPendingReservations`
+- `TransportTests.EqslLearnsSharedCardSpacingOnlyFromRateLimits`

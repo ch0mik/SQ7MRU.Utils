@@ -74,7 +74,7 @@ public partial class MainViewModel(IDownloadService downloader, IEqslAccountServ
                 skipped = Math.Max(skipped, p.Skipped);
                 failed = Math.Max(failed, p.Failed);
                 var counts = $"Downloaded: {downloaded}, skipped: {skipped}, failed: {failed}.";
-                Status = p.RetryAfter is { } delay ? $"{counts} Service rate limit — waiting {delay.TotalSeconds:F0} s."
+                Status = p.RetryAfter is { } delay ? $"{counts} Waiting for service — {delay.TotalSeconds:0.###} s."
                     : p.Item?.Status == ItemStatus.Failed
                         ? $"{counts} {p.Item.Name}: {p.Item.Failure} — {p.Item.Message}"
                         : $"{counts} Processed: {p.Completed}/{p.Total} — {p.Message}";

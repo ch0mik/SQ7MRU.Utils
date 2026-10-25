@@ -9,6 +9,29 @@ namespace SQ7MRU.Utils.Tests;
 public class ReviewRegressionTests
 {
     [Fact]
+    public void UnixCreatedFilesAndReopenedIndexLocksHavePrivateWritablePermissions()
+    {
+        if (OperatingSystem.IsWindows()) return;
+        var root = Path.Combine(Path.GetTempPath(), "sq7mru-unix-mode-" + Guid.NewGuid().ToString("N"));
+        var ownerReadWrite = UnixFileMode.UserRead | UnixFileMode.UserWrite;
+        try
+        {
+            using (var directory = new SecureArtifactDirectory(root, create: true))
+            {
+                using (var stream = directory.CreateTemporary("certificate.tmp")) stream.Write("test"u8);
+                directory.Commit("certificate.tmp", "certificate.pdf");
+                Assert.Equal(ownerReadWrite, File.GetUnixFileMode(Path.Combine(root, "certificate.pdf")));
+                // This reproduced Permission denied on macOS ARM64 after the initial write.
+                File.WriteAllText(Path.Combine(root, "certificate.pdf"), "updated");
+                using (var lease = directory.TryAcquireLock("downloads.lock")) Assert.NotNull(lease);
+                Assert.Equal(ownerReadWrite, File.GetUnixFileMode(Path.Combine(root, "downloads.lock")));
+                using (var reopened = directory.TryAcquireLock("downloads.lock")) Assert.NotNull(reopened);
+            }
+        }
+        finally { if (Directory.Exists(root)) Directory.Delete(root, recursive: true); }
+    }
+
+    [Fact]
     public async Task HeldDirectoryCannotBeRedirectedDuringAWrite()
     {
         var fixture = Path.Combine(Path.GetTempPath(), "sq7mru-race-" + Guid.NewGuid().ToString("N"));
@@ -111,5 +134,28 @@ public class ReviewRegressionTests
         var cancelled = scheduler.WaitForCardAsync(TimeSpan.FromSeconds(12), cancellation.Token);
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
+    }
+
+    [Fact]
+    public async Task RepeatedRateLimitsAddHalfASecondAndExtendPendingReservations()
+    {
+        var clock = new FakeTimeProvider();
+        using var scheduler = new ServiceRequestScheduler(clock);
+        var initial = TimeSpan.FromSeconds(1);
+        await scheduler.WaitForCardAsync(initial, default);
+        var pending = scheduler.WaitForCardAsync(initial, default);
+        await scheduler.IncreaseEqslCardIntervalAsync(initial, default);
+        await scheduler.IncreaseEqslCardIntervalAsync(initial, default);
+        clock.Advance(TimeSpan.FromSeconds(1));
+        Assert.False(pending.IsCompleted);
+        // Let the original one-second timer wake and re-check the extended reservation.
+        await Task.Yield();
+        clock.Advance(TimeSpan.FromMilliseconds(999));
+        Assert.False(pending.IsCompleted);
+        clock.Advance(TimeSpan.FromMilliseconds(1));
+        await pending.WaitAsync(TimeSpan.FromSeconds(2));
+        var next = scheduler.WaitForCardAsync(initial, default);
+        clock.Advance(TimeSpan.FromSeconds(2));
+        await next.WaitAsync(TimeSpan.FromSeconds(2));
     }
 }

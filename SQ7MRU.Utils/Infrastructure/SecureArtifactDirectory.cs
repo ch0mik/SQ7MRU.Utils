@@ -25,7 +25,7 @@ internal sealed class SecureArtifactDirectory : IDisposable
         {
             var root = Path.GetPathRoot(directory)!;
             var current = root;
-            if (!OperatingSystem.IsWindows()) handles.Add(UnixHandle(Open(root, DirectoryFlags, 0)));
+            if (!OperatingSystem.IsWindows()) handles.Add(UnixHandle(Open(root, DirectoryFlags)));
             foreach (var part in directory[root.Length..].Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries))
             {
                 current = Path.Combine(current, part);
@@ -115,6 +115,16 @@ internal sealed class SecureArtifactDirectory : IDisposable
         if (fd < 0) ThrowLastError();
         return new SafeFileHandle((IntPtr)fd, ownsHandle: true);
     }
+
+    private static int OpenAt(int directory, string path, int flags, uint mode)
+    {
+        // Darwin ARM64 passes openat's variadic mode on the stack, not in x3.
+        // Fill x3-x7 so the ninth fixed argument occupies that first stack slot.
+        // Other supported ABIs pass this integer variadic argument like a fixed one.
+        return OperatingSystem.IsMacOS() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64
+            ? OpenAtDarwinArm64(directory, path, flags, 0, 0, 0, 0, 0, mode)
+            : OpenAtStandard(directory, path, flags, mode);
+    }
     private static ServiceException UnsafePath() => new(FailureKind.Storage, "Symbolic links, junctions and shared file links are not allowed in the output path.");
     private static void ThrowLastError()
     {
@@ -140,8 +150,11 @@ internal sealed class SecureArtifactDirectory : IDisposable
     [DllImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetFileInformationByHandle(SafeFileHandle handle, out FileInformation information);
-    [DllImport("libc", EntryPoint = "open", SetLastError = true)] private static extern int Open(string path, int flags, uint mode);
-    [DllImport("libc", EntryPoint = "openat", SetLastError = true)] private static extern int OpenAt(int directory, string path, int flags, uint mode);
+    [DllImport("libc", EntryPoint = "open", SetLastError = true)] private static extern int Open(string path, int flags);
+    [DllImport("libc", EntryPoint = "openat", SetLastError = true)] private static extern int OpenAtStandard(int directory, string path, int flags, uint mode);
+    [DllImport("libc", EntryPoint = "openat", SetLastError = true)]
+    private static extern int OpenAtDarwinArm64(int directory, string path, int flags,
+        nint reservedX3, nint reservedX4, nint reservedX5, nint reservedX6, nint reservedX7, uint mode);
     [DllImport("libc", EntryPoint = "mkdirat", SetLastError = true)] private static extern int MkdirAt(int directory, string path, uint mode);
     [DllImport("libc", EntryPoint = "renameat", SetLastError = true)] private static extern int RenameAt(int oldDirectory, string oldName, int newDirectory, string newName);
     [DllImport("libc", EntryPoint = "unlinkat", SetLastError = true)] private static extern int UnlinkAt(int directory, string name, int flags);

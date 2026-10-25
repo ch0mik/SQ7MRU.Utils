@@ -52,7 +52,7 @@ Legacy JSON indexes in either the group directory or its `.sq7mru` subdirectory 
 
 Images are decoded before acceptance, with a 32 MiB encoded limit, an 8192-pixel limit per axis and a four-million-pixel area limit. Opted-in PDFs have a 32 MiB limit and structural checks for the version header, EOF, startxref and trailer or XRef stream. PDF validation does not render the file or sanitize active content.
 
-Archives allow 1–128 flat regular certificate entries, at most 32 MiB for the ZIP or any entry and 64 MiB expanded in total. Traversal paths, links, unsafe filenames, duplicate output names and invalid certificate payloads are rejected before writing any certificates. Individual files use atomic replacement; the bundle index is committed after its files.
+Archives allow 1–128 flat regular certificate entries, at most 32 MiB for the ZIP or any entry and 64 MiB expanded in total. Traversal paths, links, unsafe filenames, duplicate output names and invalid certificate payloads are rejected before writing any certificates. Individual files use atomic replacement; the bundle index is committed after its files. On Unix, created files use owner-only read/write permissions subject to umask. The macOS ARM64 interop explicitly passes the variadic file mode on the stack, as required by the Darwin ABI.
 
 ## Verification
 

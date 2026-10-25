@@ -15,6 +15,39 @@ public sealed class StubHandler(Func<HttpRequestMessage, CancellationToken, Task
 }
 public class TransportTests
 {
+    [Theory]
+    [InlineData(429, "", 1500)]
+    [InlineData(200, "Too many queries", 1500)]
+    [InlineData(403, "Too many queries", 1500)]
+    [InlineData(500, "", 1000)]
+    public async Task EqslLearnsSharedCardSpacingOnlyFromRateLimits(int status, string body, int expectedMilliseconds)
+    {
+        var clock = new FakeTimeProvider();
+        using var scheduler = new ServiceRequestScheduler(clock);
+        var options = new ServiceHttpOptions { MinimumRequestInterval = TimeSpan.Zero, MaxRetries = 0 };
+        Assert.Equal(TimeSpan.FromSeconds(1), options.EqslCardInterval);
+        using (var rejected = new ServiceHttpSession(new(new StubHandler((_, _) => Task.FromResult(
+            new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(body) }))),
+            QslService.Eqsl, options, scheduler, clock))
+        {
+            await Assert.ThrowsAsync<ServiceException>(() => rejected.GetAsync("DisplayeQSL.cfm", default));
+        }
+        clock.Advance(TimeSpan.FromSeconds(10));
+        using var successful = new ServiceHttpSession(new(new StubHandler((_, _) => Task.FromResult(
+            new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("image") }))),
+            QslService.Eqsl, options, scheduler, clock);
+        await successful.GetAsync("DisplayeQSL.cfm", default);
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            var next = successful.GetAsync("DisplayeQSL.cfm", default);
+            Assert.False(next.IsCompleted);
+            clock.Advance(TimeSpan.FromMilliseconds(expectedMilliseconds - 1));
+            Assert.False(next.IsCompleted);
+            clock.Advance(TimeSpan.FromMilliseconds(1));
+            await next.WaitAsync(TimeSpan.FromSeconds(2));
+        }
+    }
+
     [Fact]
     public async Task NotFoundIdentifiesFinalEndpointWithoutLeakingQueryParameters()
     {

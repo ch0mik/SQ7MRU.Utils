@@ -68,6 +68,6 @@ For public repository handling and ignore rules, see [repository hygiene](../doc
 
 ## Validation snapshot
 
-The local Release validation on 2026-10-25 passed 98 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
+The local Release validation on 2026-10-25 passed 104 tests and a solution build without warnings. An isolated consumer installed the generated NuGet package and exercised its public API, including native SQLite-backed ZIP storage. All eight OpenSpec capabilities passed strict validation. These results describe local Windows checks; cross-platform GitHub Actions runs are configured separately and are not asserted here.
 
 The baseline includes EPC PDF certificates, flat extraction of multi-certificate ZIPs, migration from JSON indexes to SQLite, and skipping valid existing certificates and complete indexed bundles. Real account exports, certificates, credentials and private filesystem paths are excluded from documentation examples and versioned fixtures.
