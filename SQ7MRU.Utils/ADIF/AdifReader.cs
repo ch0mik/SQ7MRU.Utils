@@ -3,13 +3,26 @@ using System.Reflection;
 
 namespace SQ7MRU.Utils;
 
-/// <summary>Length-aware reader; field values may contain line breaks or angle brackets.</summary>
+/// <summary>Parses ADIF text using declared field lengths instead of splitting values at angle brackets.</summary>
+/// <param name="adifContent">Complete ADIF text held in memory; a header is optional.</param>
+/// <exception cref="ArgumentNullException">The supplied text is null.</exception>
+/// <remarks>Parsing is synchronous CPU work. Field names are case-insensitive; recognized string fields are assigned to AdifRow and unknown fields are skipped by their declared length. Dispose releases the reader's reference to the input; it does not erase strings from memory.</remarks>
+/// <seealso href="https://www.adif.org/100/adif_100.htm">ADIF 1.0 physical format, field types and field definitions.</seealso>
 public sealed class AdifReader(string adifContent) : IDisposable
 {
     private static readonly IReadOnlyDictionary<string, PropertyInfo> Properties = typeof(AdifRow).GetProperties()
         .Where(p => p.CanWrite && p.PropertyType == typeof(string)).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
     private string? content = adifContent ?? throw new ArgumentNullException(nameof(adifContent));
+    /// <summary>Gets whether the input reference has been released and parsing is no longer available.</summary>
     public bool IsDisposed => content is null;
+    /// <summary>Parses the retained ADIF text into QSO records and normalizes callsign/band casing.</summary>
+    /// <param name="cancellationToken">Checked during parsing; cancellation throws rather than returning partial records.</param>
+    /// <returns>A new list containing terminated records with a nonblank CALL; header fields and records without CALL are omitted.</returns>
+    /// <exception cref="ObjectDisposedException">This reader has been disposed.</exception>
+    /// <exception cref="FormatException">A tag is unterminated, a declared field length is invalid/out of bounds, or a final QSO with CALL lacks EOR.</exception>
+    /// <exception cref="OperationCanceledException">Caller cancellation is requested.</exception>
+    /// <remarks>Each call parses the input again without consuming it. Values are trimmed and lengths use .NET string characters, not UTF-8 bytes. Numeric/date ADIF fields remain strings and are not schema-validated. Do not parse concurrently with Dispose.</remarks>
+    /// <remarks>Optional type indicators are accepted but not interpreted; zero-length fields and text between fields are accepted. Requiring CALL, trimming values and normalizing casing are library policies, not requirements of the ADIF 1.0 physical format. This string-based API does not support arbitrary binary ADIF payloads.</remarks>
     public List<AdifRow> GetAdifRows(CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(IsDisposed, this);
@@ -42,5 +55,7 @@ public sealed class AdifReader(string adifContent) : IDisposable
         if (hasFields && !string.IsNullOrWhiteSpace(row.CALL)) throw new FormatException("ADIF record is missing EOR.");
         return rows;
     }
+    /// <summary>Releases the retained input reference and prevents subsequent parsing.</summary>
+    /// <remarks>Repeated calls are harmless. Existing rows returned earlier are not modified.</remarks>
     public void Dispose() => content = null;
 }

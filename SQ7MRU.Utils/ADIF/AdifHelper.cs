@@ -4,8 +4,15 @@ using System.Text;
 
 namespace SQ7MRU.Utils
 {
+    /// <summary>Exports the string-backed ADIF row model and provides legacy band/case normalization helpers.</summary>
+    /// <seealso href="https://www.adif.org/100/adif_100.htm">Historical ADIF 1.0 specification describing length-prefixed fields and record markers.</seealso>
     public static class AdifHelper
     {
+        /// <summary>Serializes rows with an ADIF header, program identifier, UTC creation timestamp and EOR-delimited records.</summary>
+        /// <param name="rows">Non-null array of non-null records; an empty array produces a header-only export.</param>
+        /// <returns>ADIF text with the implemented format-version header and only nonempty string fields.</returns>
+        /// <remarks>Uses reflection and .NET string lengths, not encoded byte counts. Field order follows runtime property enumeration and is not a stable sorting contract. This method does not upload, validate records or change their values.</remarks>
+        /// <remarks>The exporter declares ADIF_VER 3.0.6 and begins with a tagged header. It does not produce the strict ADIF 1.0 header convention, which requires a non-angle-bracket first character when a header is present.</remarks>
         public static string ExportAsADIF(AdifRow[] rows)
         {
             StringBuilder sb = new StringBuilder();
@@ -27,6 +34,10 @@ namespace SQ7MRU.Utils
             return $"<{tag?.ToUpper()}:{value?.Length}>{value} ";
         }
 
+        /// <summary>Serializes one record's nonempty public string properties and appends an EOR marker.</summary>
+        /// <param name="row">Non-null string-backed QSO record to serialize.</param>
+        /// <returns>One ADIF record without a file header, including its terminating EOR.</returns>
+        /// <remarks>Null/empty values are omitted. Values are not escaped because lengths delimit them; lengths count .NET string characters. No callsign, numeric, date or enum validation is performed.</remarks>
         public static string ConvertToString(AdifRow row)
         {
             StringBuilder sbRow = new StringBuilder();
@@ -42,11 +53,10 @@ namespace SQ7MRU.Utils
             return $"{sbRow.ToString()}<EOR>";
         }
 
-        /// <summary>
-        /// http://www.adif.org/308/ADIF_308_annotated.htm#Band_Enumeration
-        /// </summary>
-        /// <param name="freq"></param>
-        /// <returns></returns>
+        /// <summary>Maps a frequency in MHz to the implemented amateur-radio ADIF band label.</summary>
+        /// <param name="freq">Frequency in megahertz, not hertz or kilohertz.</param>
+        /// <returns>A band label such as 20m, or null if no implemented interval matches.</returns>
+        /// <remarks>Legacy intervals use strict inequalities: exact endpoints are excluded. This is a fixed mapping, not a current jurisdiction-specific frequency-allocation check.</remarks>
         public static string? FreqToBand(double freq)
         {
             if (freq > 0.1357 && freq < 0.1378)
@@ -176,6 +186,10 @@ namespace SQ7MRU.Utils
             }
         }
 
+        /// <summary>Normalizes only CALL to uppercase and BAND to lowercase using invariant casing.</summary>
+        /// <param name="row">Non-null record mutated in place; null field values remain null.</param>
+        /// <returns>The same record instance after case normalization.</returns>
+        /// <remarks>Does not trim values, infer bands, normalize modes or validate other fields. Copy a record first if the original casing must be retained.</remarks>
         public static AdifRow FixRecord(AdifRow row)
         {
             //ToDo 

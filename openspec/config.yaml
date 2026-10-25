@@ -4,6 +4,11 @@ context: |
   This repository provides SQ7MRU.Utils, a .NET 10 NuGet library, and
   SQ7MRU.Downloader, a separate Avalonia 12 MVVM desktop application.
   Artifacts are written in English; structural headings and SHALL/MUST remain English.
+  Public API documentation uses adjacent triple-slash XML source comments.
+  Ship a library README and XML documentation for all three DLLs in NuGet;
+  fail library builds on missing public comments and validate packaged docs.
+  ADIF documentation references the historical ADIF 1.0 specification;
+  distinguish format rules from library policies and later-revision export fields.
   openspec/specs documents the current implementation, not a proposed rewrite.
   Core contains contracts; Application coordinates bounded async download work;
   SQ7MRU.Utils provides service adapters, ADIF utilities, secure storage and DI.
@@ -20,12 +25,20 @@ context: |
   Release versions come exclusively from GitHub tags; never hardcode a specific release tag in source or documentation.
   eQSL pacing starts at 1 second and grows by 500 ms per rate-limit response,
   shared across sessions for the provider lifetime; honor Retry-After.
-  Desktop release RIDs: win-x64, win-arm64, linux-x64, linux-arm64,
-  osx-x64, osx-arm64. Build and test each on a native OS/CPU runner.
+  Desktop release RIDs: win-x86, win-x64, win-arm64, linux-x64, linux-arm64,
+  linux-arm, osx-x64, osx-arm64. Six 64-bit targets use native runners;
+  32-bit targets are cross-published with source tests on their 64-bit host.
+  Desktop assets contain one self-contained executable with native libraries
+  bundled for self-extraction. No installed .NET runtime is needed.
+  Explicit-RID desktop publishes default to this mode in the project itself.
+  Exclude library API XML and external PDB files from desktop output;
+  keep the XML documentation in NuGet and fail on extra desktop publish files.
+  Upload desktop executables and SHA-256 files directly, without ZIP/TAR wrapping.
+  Linux x86 is excluded because the selected SDK has no application host.
   NuGet is one net10.0 AnyCPU package. Verify the same candidate package
   on all six native OS/CPU targets before publishing; test native SQLite too.
-  v* tag pushes publish NuGet and desktop assets for the same version.
-  Published release events also update desktop assets for the release tag.
+  v* tag pushes publish NuGet only. Published release events publish desktop
+  assets for the same tag; tag pushes must not trigger duplicate desktop builds.
   Preserve existing release text; replace matching assets on rerun.
   Manual desktop runs upload artifacts only and use the SDK-evaluated version.
   Do not create local release ZIP files as part of development.

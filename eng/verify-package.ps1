@@ -22,6 +22,41 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     $Version = $versions[0]
 }
 if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$') { throw 'Invalid package version' }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$candidate = Join-Path $source "SQ7MRU.Utils.$Version.nupkg"
+$archive = [IO.Compression.ZipFile]::OpenRead($candidate)
+try {
+    $readme = $archive.GetEntry('README.md')
+    if ($null -eq $readme -or $readme.Length -eq 0) { throw 'Package README.md is missing or empty' }
+    foreach ($assembly in @('SQ7MRU.Utils', 'SQ7MRU.Utils.Core', 'SQ7MRU.Utils.Application')) {
+        $entry = $archive.GetEntry("lib/net10.0/$assembly.xml")
+        if ($null -eq $entry) { throw "Missing public API XML documentation: $assembly" }
+        $reader = [IO.StreamReader]::new($entry.Open())
+        try { [xml]$documentation = $reader.ReadToEnd() }
+        finally { $reader.Dispose() }
+        if ($documentation.doc.assembly.name -ne $assembly) { throw "Unexpected documentation assembly: $assembly" }
+        $members = @($documentation.SelectNodes('/doc/members/member'))
+        if ($members.Count -eq 0) { throw "Empty API documentation: $assembly" }
+        $documentedTypes = @($members | Where-Object { $_.GetAttribute('name').StartsWith('T:') } |
+            ForEach-Object { $_.GetAttribute('name').Substring(2) })
+        if ($documentedTypes.Count -eq 0) { throw "No documented API types: $assembly" }
+        foreach ($member in $members) {
+            $memberName = $member.GetAttribute('name')
+            # Regex source generators emit remarks-only entries for private methods
+            # on undocumented internal types. They are not part of the public API.
+            if (-not $memberName.StartsWith('T:') -and
+                @($documentedTypes | Where-Object { $memberName.Substring(2).StartsWith($_ + '.', [StringComparison]::Ordinal) }).Count -eq 0) { continue }
+            $summary = $member.SelectSingleNode('summary')
+            if ($null -eq $summary -or [string]::IsNullOrWhiteSpace($summary.InnerText)) {
+                throw "Missing API summary: $($member.GetAttribute('name'))"
+            }
+            foreach ($parameter in $member.SelectNodes('param')) {
+                if ([string]::IsNullOrWhiteSpace($parameter.InnerText)) { throw "Empty parameter documentation: $($member.GetAttribute('name'))" }
+            }
+        }
+    }
+}
+finally { $archive.Dispose() }
 $work = Join-Path $PSScriptRoot "../artifacts/package-smoke/$([Guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $work -Force | Out-Null
 @"

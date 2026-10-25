@@ -1,7 +1,5 @@
 name: Publish desktop
 on:
-  push:
-    tags: ['v*']
   release:
     types: [published]
   workflow_dispatch:
@@ -17,13 +15,18 @@ jobs:
       fail-fast: false
       matrix:
         rid:
+          - win-x86
           - win-x64
           - win-arm64
           - linux-x64
           - linux-arm64
+          - linux-arm
           - osx-x64
           - osx-arm64
         include:
+          - os: windows-latest
+            rid: win-x86
+            # Tests run on the x64 host; publication targets 32-bit x86.
           - os: windows-latest
             rid: win-x64
           - os: windows-11-arm
@@ -32,6 +35,9 @@ jobs:
             rid: linux-x64
           - os: ubuntu-24.04-arm
             rid: linux-arm64
+          - os: ubuntu-24.04-arm
+            rid: linux-arm
+            # Tests run on the ARM64 host; publication targets 32-bit ARM.
           - os: macos-15-intel
             rid: osx-x64
           - os: macos-latest
@@ -67,9 +73,21 @@ jobs:
           dotnet publish SQ7MRU.Downloader/SQ7MRU.Downloader.csproj
           -c Release -r ${{ matrix.rid }} --self-contained true
           -p:Version=${{ steps.version.outputs.value }}
-          -p:PublishSingleFile=false -p:PublishTrimmed=false
+          -p:PublishSingleFile=true -p:PublishTrimmed=false
+          -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=embedded
           -o artifacts/publish
-      - name: Archive release files
+      - name: Verify single-file output
+        shell: pwsh
+        env:
+          RELEASE_RID: ${{ matrix.rid }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $name = if ($env:RELEASE_RID.StartsWith('win-')) { 'SQ7MRU.Downloader.exe' } else { 'SQ7MRU.Downloader' }
+          $files = @(Get-ChildItem -LiteralPath artifacts/publish -Recurse -File)
+          if ($files.Count -ne 1 -or $files[0].Name -ne $name) {
+            throw "Expected one self-contained executable, found: $($files.Name -join ', ')"
+          }
+      - name: Stage standalone executable
         shell: pwsh
         env:
           RELEASE_VERSION: ${{ steps.version.outputs.value }}
@@ -77,26 +95,23 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $name = "SQ7MRU.Downloader-$env:RELEASE_VERSION-$env:RELEASE_RID"
-          if ($IsWindows) {
-            $archive = "artifacts/$name.zip"
-            Compress-Archive -Path artifacts/publish/* -DestinationPath $archive
+          if ($env:RELEASE_RID.StartsWith('win-')) {
+            $source = 'artifacts/publish/SQ7MRU.Downloader.exe'
+            $binary = "artifacts/$name.exe"
           } else {
-            $archive = "artifacts/$name.tar.gz"
-            tar -czf $archive -C artifacts/publish .
-            if ($LASTEXITCODE -ne 0) { throw 'Archive creation failed' }
+            $source = 'artifacts/publish/SQ7MRU.Downloader'
+            $binary = "artifacts/$name"
           }
-          $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$hash  $([IO.Path]::GetFileName($archive))" | Set-Content -LiteralPath "$archive.sha256" -Encoding ascii
+          Copy-Item -LiteralPath $source -Destination $binary
+          $hash = (Get-FileHash -LiteralPath $binary -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $([IO.Path]::GetFileName($binary))" | Set-Content -LiteralPath "$binary.sha256" -Encoding ascii
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.rid }}
-          path: |
-            artifacts/*.zip
-            artifacts/*.tar.gz
-            artifacts/*.sha256
+          path: artifacts/SQ7MRU.Downloader-*
           if-no-files-found: error
   release:
-    if: github.event_name != 'workflow_dispatch' && startsWith(github.event.release.tag_name || github.ref_name, 'v')
+    if: github.event_name == 'release' && startsWith(github.event.release.tag_name, 'v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -107,19 +122,12 @@ jobs:
           pattern: desktop-*
           merge-multiple: true
           path: artifacts
-      - name: Attach archives to GitHub Release
+      - name: Attach executables to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
-          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            args=()
-            if [[ "${RELEASE_TAG#v}" == *-* ]]; then args+=(--prerelease); fi
-            if ! gh release create "$RELEASE_TAG" --verify-tag --title "SQ7MRU ${RELEASE_TAG#v}" --generate-notes "${args[@]}"; then
-              # Another actor may have created the release after our initial check.
-              gh release view "$RELEASE_TAG" >/dev/null
-            fi
-          fi
+          gh release view "$RELEASE_TAG" >/dev/null
           gh release upload "$RELEASE_TAG" artifacts/* --clobber

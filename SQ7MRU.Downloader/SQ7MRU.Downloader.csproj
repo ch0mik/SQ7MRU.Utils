@@ -3,6 +3,13 @@
     <OutputType>WinExe</OutputType><IsPackable>false</IsPackable>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="12.1.4" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.4" />
@@ -22,5 +29,17 @@
     <XmlPoke XmlInputPath="$(ApplicationManifest)"
              Query="/*[local-name()='assembly']/*[local-name()='assemblyIdentity']/@version"
              Value="$(AssemblyVersion)" />
+  </Target>
+  <Target Name="ExcludeDocumentationAndDebugSymbolsFromSingleFilePublish" AfterTargets="ComputeFilesToPublish"
+          Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)"
+                             Condition="'%(ResolvedFileToPublish.Extension)' == '.xml' And
+                               ('%(ResolvedFileToPublish.Filename)' == 'SQ7MRU.Utils' Or
+                                '%(ResolvedFileToPublish.Filename)' == 'SQ7MRU.Utils.Core' Or
+                                '%(ResolvedFileToPublish.Filename)' == 'SQ7MRU.Utils.Application')" />
+    </ItemGroup>
   </Target>
 </Project>

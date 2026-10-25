@@ -2,809 +2,657 @@
 namespace SQ7MRU.Utils
 {
     /// <summary>
-    /// Class contains QSO Fields v3.0.6 ADIF
-    /// http://www.adif.org/306/ADIF_306.htm#QSO_Fields
+    /// Represents the implemented legacy ADIF QSO field model using optional raw strings.
     /// </summary>
+    /// <seealso href="https://www.adif.org/100/adif_100.htm">ADIF 1.0 base field definitions; this model also includes fields from later revisions.</seealso>
+    /// <remarks>Unset fields are null. The model does not enforce ADIF numeric, date or enumeration constraints. The reader fills recognized properties, skips unknown fields and normalizes callsign/band casing. This model is not a guarantee of complete coverage of the latest ADIF schema.</remarks>
     public class AdifRow
     {
-        ///Field Name : ADDRESS
-        ///Data Type : MultilineString
-        ///Description : the contacted station's complete mailing address: full name, street address, city, postal code, and country
+        /// <summary>Gets or sets the contacted station's complete mailing address: full name, street address, city, postal code, and country.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: MultilineString. The model does not validate or convert this field.</value>
         public string ADDRESS { get; set; }
 
-        ///Field Name : ADDRESS_INTL
-        ///Data Type : IntlMultilineString
-        ///Description : the contacted station's complete mailing address: full name, street address, city, postal code, and country
+        /// <summary>Gets or sets the contacted station's complete mailing address: full name, street address, city, postal code, and country.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlMultilineString. The model does not validate or convert this field.</value>
         public string ADDRESS_INTL { get; set; }
 
-        ///Field Name : AGE
-        ///Data Type : Number
-        ///Description : the contacted station's operator's age in years in the range 0 to 120 (inclusive)
+        /// <summary>Gets or sets the contacted station's operator's age in years in the range 0 to 120 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string AGE { get; set; }
 
-        ///Field Name : A_INDEX
-        ///Data Type : Number
-        ///Description : the geomagnetic A index at the time of the QSO in the range 0 to 400 (inclusive)
+        /// <summary>Gets or sets the geomagnetic A index at the time of the QSO in the range 0 to 400 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string A_INDEX { get; set; }
 
-        ///Field Name : ANT_AZ
-        ///Data Type : Number
-        ///Description : the logging station's antenna azimuth, in degrees with a value between 0 to 360 (inclusive). Values outside this range are import-only and must be normalized for export (e.g. 370 is exported as 10). True north is 0 degrees with values increasing in a clockwise direction.
+        /// <summary>Gets or sets the logging station's antenna azimuth, in degrees with a value between 0 to 360 (inclusive). Values outside this range are import-only and must be normalized for export (e.g. 370 is exported as 10). True north is 0 degrees with values increasing in a clockwise direction.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string ANT_AZ { get; set; }
 
-        ///Field Name : ANT_EL
-        ///Data Type : Number
-        ///Description : the logging station's antenna elevation, in degrees with a value between -90 to 90 (inclusive). Values outside this range are import-only and must be normalized for export (e.g. 100 is exported as 80). The horizon is 0 degrees with values increasing as the angle moves in an upward direction.
+        /// <summary>Gets or sets the logging station's antenna elevation, in degrees with a value between -90 to 90 (inclusive). Values outside this range are import-only and must be normalized for export (e.g. 100 is exported as 80). The horizon is 0 degrees with values increasing as the angle moves in an upward direction.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string ANT_EL { get; set; }
 
-        ///Field Name : ANT_PATH
-        ///Data Type : Enumeration
-        ///Enumeration : Ant Path
-        ///Description : the signal path
+        /// <summary>Gets or sets the signal path.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Ant Path</remarks>
         public string ANT_PATH { get; set; }
 
-        ///Field Name : ARRL_SECT
-        ///Data Type : Enumeration
-        ///Enumeration : ARRL Section
-        ///Description : the contacted station's ARRL section
+        /// <summary>Gets or sets the contacted station's ARRL section.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : ARRL Section</remarks>
         public string ARRL_SECT { get; set; }
 
-        ///Field Name : AWARD_SUBMITTED
-        ///Data Type : SponsoredAwardList
-        ///Enumeration : Sponsored Award
-        ///Description : the list of awards submitted to a sponsor.  note that this field might not be used in a QSO record. It might be used to convey information about a user's "Award Account" between an award sponsor and the user. For example, AA6YQ might submit a request for awards by sending the following:  <CALL:5>AA6YQ <AWARD_SUBMITTED:64>ADIF_CENTURY_BASIC,ADIF_CENTURY_SILVER, ADIF_SPECTRUM_100-160m
+        /// <summary>Gets or sets the list of awards submitted to a sponsor.  note that this field might not be used in a QSO record. It might be used to convey information about a user's "Award Account" between an award sponsor and the user. For example, AA6YQ might submit a request for awards by sending the following:  &lt;CALL:5&gt;AA6YQ &lt;AWARD_SUBMITTED:64&gt;ADIF_CENTURY_BASIC,ADIF_CENTURY_SILVER, ADIF_SPECTRUM_100-160m.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SponsoredAwardList. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Sponsored Award</remarks>
         public string AWARD_SUBMITTED { get; set; }
 
-        ///Field Name : AWARD_GRANTED
-        ///Data Type : SponsoredAwardList
-        ///Enumeration : Sponsored Award
-        ///Description : the list of awards granted by a sponsor.  note that this field might not be used in a QSO record. It might be used to convey information about a user's "Award Account" between an award sponsor and the user. For example, in response to a request "send me a list of the awards granted to AA6YQ", this might be received:  <CALL:5>AA6YQ <AWARD_GRANTED:64>ADIF_CENTURY_BASIC,ADIF_CENTURY_SILVER, ADIF_SPECTRUM_100-160m
+        /// <summary>Gets or sets the list of awards granted by a sponsor.  note that this field might not be used in a QSO record. It might be used to convey information about a user's "Award Account" between an award sponsor and the user. For example, in response to a request "send me a list of the awards granted to AA6YQ", this might be received:  &lt;CALL:5&gt;AA6YQ &lt;AWARD_GRANTED:64&gt;ADIF_CENTURY_BASIC,ADIF_CENTURY_SILVER, ADIF_SPECTRUM_100-160m.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SponsoredAwardList. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Sponsored Award</remarks>
         public string AWARD_GRANTED { get; set; }
 
-        ///Field Name : BAND
-        ///Data Type : Enumeration
-        ///Enumeration : Band
-        ///Description : QSO Band
+        /// <summary>Gets or sets QSO Band.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Band</remarks>
         public string BAND { get; set; }
 
-        ///Field Name : BAND_RX
-        ///Data Type : Enumeration
-        ///Enumeration : Band
-        ///Description : in a split frequency QSO, the logging station's receiving band
+        /// <summary>Gets or sets in a split frequency QSO, the logging station's receiving band.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Band</remarks>
         public string BAND_RX { get; set; }
 
-        ///Field Name : CALL
-        ///Data Type : String
-        ///Description : the contacted station's Callsign
+        /// <summary>Gets or sets the contacted station's Callsign.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string CALL { get; set; }
 
-        ///Field Name : CHECK
-        ///Data Type : String
-        ///Description : contest check (e.g. for ARRL Sweepstakes)
+        /// <summary>Gets or sets contest check (e.g. for ARRL Sweepstakes).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string CHECK { get; set; }
 
-        ///Field Name : CLASS
-        ///Data Type : String
-        ///Description : contest class (e.g. for ARRL Field Day)
+        /// <summary>Gets or sets contest class (e.g. for ARRL Field Day).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string CLASS { get; set; }
 
-        ///Field Name : CLUBLOG_QSO_UPLOAD_DATE
-        ///Data Type : Date
-        ///Description : the date the QSO was last uploaded to the Club Log online service
+        /// <summary>Gets or sets the date the QSO was last uploaded to the Club Log online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string CLUBLOG_QSO_UPLOAD_DATE { get; set; }
 
-        ///Field Name : CLUBLOG_QSO_UPLOAD_STATUS
-        ///Data Type : Enumeration
-        ///Enumeration : QSO Upload Status
-        ///Description : the upload status of the QSO on the Club Log online service
+        /// <summary>Gets or sets the upload status of the QSO on the Club Log online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSO Upload Status</remarks>
         public string CLUBLOG_QSO_UPLOAD_STATUS { get; set; }
 
-        ///Field Name : CNTY
-        ///Data Type : Enumeration
-        ///Enumeration : (Secondary Administrative Subdivision, function of DXCC field's value)
-        ///Description : the contacted station's Secondary Administrative Subdivision (e.g. US county, JA Gun), in the specified format
+        /// <summary>Gets or sets the contacted station's Secondary Administrative Subdivision (e.g. US county, JA Gun), in the specified format.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : (Secondary Administrative Subdivision, function of DXCC field's value)</remarks>
         public string CNTY { get; set; }
 
-        ///Field Name : COMMENT
-        ///Data Type : String
-        ///Description : comment field for QSO
+        /// <summary>Gets or sets comment field for QSO.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string COMMENT { get; set; }
 
-        ///Field Name : COMMENT_INTL
-        ///Data Type : IntlString
-        ///Description : comment field for QSO
+        /// <summary>Gets or sets comment field for QSO.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string COMMENT_INTL { get; set; }
 
-        ///Field Name : CONT
-        ///Data Type : Enumeration
-        ///Enumeration : Continent
-        ///Description : the contacted station's Continent
+        /// <summary>Gets or sets the contacted station's Continent.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Continent</remarks>
         public string CONT { get; set; }
 
-        ///Field Name : CONTACTED_OP
-        ///Data Type : String
-        ///Description : the callsign of the individual operating the contacted station
+        /// <summary>Gets or sets the callsign of the individual operating the contacted station.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string CONTACTED_OP { get; set; }
 
-        ///Field Name : CONTEST_ID
-        ///Data Type : String
-        ///Enumeration : Contest ID
-        ///Description : QSO Contest Identifieruse enumeration values for interoperability
+        /// <summary>Gets or sets QSO Contest Identifieruse enumeration values for interoperability.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Contest ID</remarks>
         public string CONTEST_ID { get; set; }
 
-        ///Field Name : COUNTRY
-        ///Data Type : String
-        ///Description : the contacted station's DXCC entity name
+        /// <summary>Gets or sets the contacted station's DXCC entity name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string COUNTRY { get; set; }
 
-        ///Field Name : COUNTRY_INTL
-        ///Data Type : IntlString
-        ///Description : the contacted station's DXCC entity name
+        /// <summary>Gets or sets the contacted station's DXCC entity name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string COUNTRY_INTL { get; set; }
 
-        ///Field Name : CQZ
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's CQ Zone in the range 1 to 40 (inclusive)
+        /// <summary>Gets or sets the contacted station's CQ Zone in the range 1 to 40 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string CQZ { get; set; }
 
-        ///Field Name : CREDIT_SUBMITTED
-        ///Data Type : CreditList  AwardList (import-only)
-        ///Enumeration : Credit  Award (import-only)
-        ///Description : the list of credits sought for this QSO  Use of data type AwardList and enumeration Award are import-only
+        /// <summary>Gets or sets the list of credits sought for this QSO  Use of data type AwardList and enumeration Award are import-only.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: CreditList  AwardList (import-only). The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Credit  Award (import-only)</remarks>
         public string CREDIT_SUBMITTED { get; set; }
 
-        ///Field Name : CREDIT_GRANTED
-        ///Data Type : CreditList  AwardList (import-only)
-        ///Enumeration : Credit  Award (import-only)
-        ///Description : the list of credits granted to this QSO  Use of data type AwardList and enumeration Award are import-only
+        /// <summary>Gets or sets the list of credits granted to this QSO  Use of data type AwardList and enumeration Award are import-only.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: CreditList  AwardList (import-only). The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Credit  Award (import-only)</remarks>
         public string CREDIT_GRANTED { get; set; }
 
-        ///Field Name : DARC_DOK
-        ///Data Type : Enumeration
-        ///Enumeration : (DOKs listed in DARC DOK List  Special DOKs listed in DARC Special DOK List)
-        ///Description : the contacted station's DARC DOK (District Location Code)  A DOK comprises letters and numbers, e.g. <DARC_DOK:3>A01
+        /// <summary>Gets or sets the contacted station's DARC DOK (District Location Code)  A DOK comprises letters and numbers, e.g. &lt;DARC_DOK:3&gt;A01.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : (DOKs listed in DARC DOK List  Special DOKs listed in DARC Special DOK List)</remarks>
         public string DARC_DOK { get; set; }
 
-        ///Field Name : DISTANCE
-        ///Data Type : Number
-        ///Description : the distance between the logging station and the contacted station in kilometers via the specified signal path with a value greater than or equal to 0
+        /// <summary>Gets or sets the distance between the logging station and the contacted station in kilometers via the specified signal path with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string DISTANCE { get; set; }
 
-        ///Field Name : DXCC
-        ///Data Type : Enumeration
-        ///Enumeration : DXCC Entity Code
-        ///Description : the contacted station's DXCC Entity Code  <DXCC:1>0 means that the contacted station is known not to be within a DXCC entity.
+        /// <summary>Gets or sets the contacted station's DXCC Entity Code  &lt;DXCC:1&gt;0 means that the contacted station is known not to be within a DXCC entity.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : DXCC Entity Code</remarks>
         public string DXCC { get; set; }
 
-        ///Field Name : EMAIL
-        ///Data Type : String
-        ///Description : the contacted station's email address
+        /// <summary>Gets or sets the contacted station's email address.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string EMAIL { get; set; }
 
-        ///Field Name : EQ_CALL
-        ///Data Type : String
-        ///Description : the contacted station's owner's callsign
+        /// <summary>Gets or sets the contacted station's owner's callsign.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string EQ_CALL { get; set; }
 
-        ///Field Name : EQSL_QSLRDATE
-        ///Data Type : Date
-        ///Description : date QSL received from eQSL.cc(only valid if EQSL_QSL_RCVD is Y, I, or V) (V import-only)
+        /// <summary>Gets or sets date QSL received from eQSL.cc(only valid if EQSL_QSL_RCVD is Y, I, or V) (V import-only).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string EQSL_QSLRDATE { get; set; }
 
-        ///Field Name : EQSL_QSLSDATE
-        ///Data Type : Date
-        ///Description : date QSL sent to eQSL.cc(only valid if EQSL_QSL_SENT is Y, Q, or I)
+        /// <summary>Gets or sets date QSL sent to eQSL.cc(only valid if EQSL_QSL_SENT is Y, Q, or I).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string EQSL_QSLSDATE { get; set; }
 
-        ///Field Name : EQSL_QSL_RCVD
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Rcvd
-        ///Description : eQSL.cc QSL received status  instead of V (import-only) use <CREDIT_GRANTED:42>CQWAZ:eqsl,CQWAZ_BAND:eqsl,CQWAZ_MODE:eqsl  Default Value: N
+        /// <summary>Gets or sets eQSL.cc QSL received status  instead of V (import-only) use &lt;CREDIT_GRANTED:42&gt;CQWAZ:eqsl,CQWAZ_BAND:eqsl,CQWAZ_MODE:eqsl  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Rcvd</remarks>
         public string EQSL_QSL_RCVD { get; set; }
 
-        ///Field Name : EQSL_QSL_SENT
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Sent
-        ///Description : eQSL.cc QSL sent status  Default Value: N
+        /// <summary>Gets or sets eQSL.cc QSL sent status  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Sent</remarks>
         public string EQSL_QSL_SENT { get; set; }
 
-        ///Field Name : FISTS
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's FISTS CW Club member number with a value greater than 0.
+        /// <summary>Gets or sets the contacted station's FISTS CW Club member number with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string FISTS { get; set; }
 
-        ///Field Name : FISTS_CC
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's FISTS CW Club Century Certificate (CC) number with a value greater than 0.
+        /// <summary>Gets or sets the contacted station's FISTS CW Club Century Certificate (CC) number with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string FISTS_CC { get; set; }
 
-        ///Field Name : FORCE_INIT
-        ///Data Type : Boolean
-        ///Description : new EME "initial"
+        /// <summary>Gets or sets new EME "initial".</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Boolean. The model does not validate or convert this field.</value>
         public string FORCE_INIT { get; set; }
 
-        ///Field Name : FREQ
-        ///Data Type : Number
-        ///Description : QSO frequency in Megahertz
+        /// <summary>Gets or sets QSO frequency in Megahertz.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string FREQ { get; set; }
 
-        ///Field Name : FREQ_RX
-        ///Data Type : Number
-        ///Description : in a split frequency QSO, the logging station's receiving frequency in Megahertz
+        /// <summary>Gets or sets in a split frequency QSO, the logging station's receiving frequency in Megahertz.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string FREQ_RX { get; set; }
 
-        ///Field Name : GRIDSQUARE
-        ///Data Type : GridSquare
-        ///Description : the contacted station's 2-character, 4-character, 6-character, or 8-character Maidenhead Grid Square
+        /// <summary>Gets or sets the contacted station's 2-character, 4-character, 6-character, or 8-character Maidenhead Grid Square.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: GridSquare. The model does not validate or convert this field.</value>
         public string GRIDSQUARE { get; set; }
 
-        ///Field Name : GUEST_OP
-        ///Data Type : String
-        ///Description : import-only: use OPERATOR instead
+        /// <summary>Gets or sets import-only: use OPERATOR instead.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string GUEST_OP { get; set; }
 
-        ///Field Name : HRDLOG_QSO_UPLOAD_DATE
-        ///Data Type : Date
-        ///Description : the date the QSO was last uploaded to the HRDLog.net online service
+        /// <summary>Gets or sets the date the QSO was last uploaded to the HRDLog.net online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string HRDLOG_QSO_UPLOAD_DATE { get; set; }
 
-        ///Field Name : HRDLOG_QSO_UPLOAD_STATUS
-        ///Data Type : Enumeration
-        ///Enumeration : QSO Upload Status
-        ///Description : the upload status of the QSO on the HRDLog.net online service
+        /// <summary>Gets or sets the upload status of the QSO on the HRDLog.net online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSO Upload Status</remarks>
         public string HRDLOG_QSO_UPLOAD_STATUS { get; set; }
 
-        ///Field Name : IOTA
-        ///Data Type : IOTARefNo
-        ///Description : the contacted station's IOTA designator, in format CC-XXX, whereCC is a member of the Continent enumeration XXX is the island group designator, where 1 <= XXX <= 999 [use leading zeroes]
+        /// <summary>Gets or sets the contacted station's IOTA designator, in format CC-XXX, whereCC is a member of the Continent enumeration XXX is the island group designator, where 1 &lt;= XXX &lt;= 999 [use leading zeroes].</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IOTARefNo. The model does not validate or convert this field.</value>
         public string IOTA { get; set; }
 
-        ///Field Name : IOTA_ISLAND_ID
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's IOTA Island Identifier, an 8-digit integer in the range 1 to 99999999 [leading zeroes optional]
+        /// <summary>Gets or sets the contacted station's IOTA Island Identifier, an 8-digit integer in the range 1 to 99999999 [leading zeroes optional].</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string IOTA_ISLAND_ID { get; set; }
 
-        ///Field Name : ITUZ
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's ITU zone in the range 1 to 90 (inclusive)
+        /// <summary>Gets or sets the contacted station's ITU zone in the range 1 to 90 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string ITUZ { get; set; }
 
-        ///Field Name : K_INDEX
-        ///Data Type : Integer
-        ///Description : the geomagnetic K index at the time of the QSO in the range 0 to 9 (inclusive)
+        /// <summary>Gets or sets the geomagnetic K index at the time of the QSO in the range 0 to 9 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string K_INDEX { get; set; }
 
-        ///Field Name : LAT
-        ///Data Type : Location
-        ///Description : the contacted station's latitude
+        /// <summary>Gets or sets the contacted station's latitude.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Location. The model does not validate or convert this field.</value>
         public string LAT { get; set; }
 
-        ///Field Name : LON
-        ///Data Type : Location
-        ///Description : the contacted station's longitude
+        /// <summary>Gets or sets the contacted station's longitude.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Location. The model does not validate or convert this field.</value>
         public string LON { get; set; }
 
-        ///Field Name : LOTW_QSLRDATE
-        ///Data Type : Date
-        ///Description : date QSL received from ARRL Logbook of the World(only valid if LOTW_QSL_RCVD is Y, I, or V) (V import-only)
+        /// <summary>Gets or sets date QSL received from ARRL Logbook of the World(only valid if LOTW_QSL_RCVD is Y, I, or V) (V import-only).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string LOTW_QSLRDATE { get; set; }
 
-        ///Field Name : LOTW_QSLSDATE
-        ///Data Type : Date
-        ///Description : date QSL sent to ARRL Logbook of the World(only valid if LOTW_QSL_SENT is Y, Q, or I)
+        /// <summary>Gets or sets date QSL sent to ARRL Logbook of the World(only valid if LOTW_QSL_SENT is Y, Q, or I).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string LOTW_QSLSDATE { get; set; }
 
-        ///Field Name : LOTW_QSL_RCVD
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Rcvd
-        ///Description : ARRL Logbook of the World QSL received status  instead of V (import-only) use <CREDIT_GRANTED:39>DXCC:lotw,DXCC_BAND:lotw,DXCC_MODE:lotw  Default Value: N
+        /// <summary>Gets or sets ARRL Logbook of the World QSL received status  instead of V (import-only) use &lt;CREDIT_GRANTED:39&gt;DXCC:lotw,DXCC_BAND:lotw,DXCC_MODE:lotw  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Rcvd</remarks>
         public string LOTW_QSL_RCVD { get; set; }
 
-        ///Field Name : LOTW_QSL_SENT
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Sent
-        ///Description : ARRL Logbook of the World QSL sent status  Default Value: N
+        /// <summary>Gets or sets ARRL Logbook of the World QSL sent status  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Sent</remarks>
         public string LOTW_QSL_SENT { get; set; }
 
-        ///Field Name : MAX_BURSTS
-        ///Data Type : Number
-        ///Description : maximum length of meteor scatter bursts heard by the logging station, in seconds with a value greater than or equal to 0
+        /// <summary>Gets or sets maximum length of meteor scatter bursts heard by the logging station, in seconds with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string MAX_BURSTS { get; set; }
 
-        ///Field Name : MODE
-        ///Data Type : Enumeration
-        ///Enumeration : Mode
-        ///Description : QSO Mode
+        /// <summary>Gets or sets QSO Mode.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Mode</remarks>
         public string MODE { get; set; }
 
-        ///Field Name : MS_SHOWER
-        ///Data Type : String
-        ///Description : For Meteor Scatter QSOs, the name of the meteor shower in progress
+        /// <summary>Gets or sets For Meteor Scatter QSOs, the name of the meteor shower in progress.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MS_SHOWER { get; set; }
 
-        ///Field Name : MY_ANTENNA
-        ///Data Type : String
-        ///Description : the logging station's antenna
+        /// <summary>Gets or sets the logging station's antenna.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_ANTENNA { get; set; }
 
-        ///Field Name : MY_ANTENNA_INTL
-        ///Data Type : IntlString
-        ///Description : the logging station's antenna
+        /// <summary>Gets or sets the logging station's antenna.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_ANTENNA_INTL { get; set; }
 
-        ///Field Name : MY_CITY
-        ///Data Type : String
-        ///Description : the logging station's city
+        /// <summary>Gets or sets the logging station's city.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_CITY { get; set; }
 
-        ///Field Name : MY_CITY_INTL
-        ///Data Type : IntlString
-        ///Description : the logging station's city
+        /// <summary>Gets or sets the logging station's city.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_CITY_INTL { get; set; }
 
-        ///Field Name : MY_CNTY
-        ///Data Type : Enumeration
-        ///Enumeration : (Secondary Administrative Subdivision, function of MY_DXCC field's value)
-        ///Description : the logging station's Secondary Administrative Subdivision (e.g. US county, JA Gun), in the specified format
+        /// <summary>Gets or sets the logging station's Secondary Administrative Subdivision (e.g. US county, JA Gun), in the specified format.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : (Secondary Administrative Subdivision, function of MY_DXCC field's value)</remarks>
         public string MY_CNTY { get; set; }
 
-        ///Field Name : MY_COUNTRY
-        ///Data Type : String
-        ///Enumeration : Country
-        ///Description : the logging station's DXCC entity name
+        /// <summary>Gets or sets the logging station's DXCC entity name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Country</remarks>
         public string MY_COUNTRY { get; set; }
 
-        ///Field Name : MY_COUNTRY_INTL
-        ///Data Type : IntlString
-        ///Enumeration : Country
-        ///Description : the logging station's DXCC entity name
+        /// <summary>Gets or sets the logging station's DXCC entity name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Country</remarks>
         public string MY_COUNTRY_INTL { get; set; }
 
-        ///Field Name : MY_CQ_ZONE
-        ///Data Type : PositiveInteger
-        ///Description : the logging station's CQ Zone in the range 1 to 40 (inclusive)
+        /// <summary>Gets or sets the logging station's CQ Zone in the range 1 to 40 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string MY_CQ_ZONE { get; set; }
 
-        ///Field Name : MY_DXCC
-        ///Data Type : Enumeration
-        ///Enumeration : DXCC Entity Code
-        ///Description : the logging station's DXCC Entity Code  <MY_DXCC:1>0 means that the logging station is known not to be within a DXCC entity.
+        /// <summary>Gets or sets the logging station's DXCC Entity Code  &lt;MY_DXCC:1&gt;0 means that the logging station is known not to be within a DXCC entity.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : DXCC Entity Code</remarks>
         public string MY_DXCC { get; set; }
 
-        ///Field Name : MY_FISTS
-        ///Data Type : PositiveInteger
-        ///Description : the logging station's FISTS CW Club member number with a value greater than 0.
+        /// <summary>Gets or sets the logging station's FISTS CW Club member number with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string MY_FISTS { get; set; }
 
-        ///Field Name : MY_GRIDSQUARE
-        ///Data Type : GridSquare
-        ///Description : the logging station's 2-character, 4-character, 6-character, or 8-character Maidenhead Grid Square
+        /// <summary>Gets or sets the logging station's 2-character, 4-character, 6-character, or 8-character Maidenhead Grid Square.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: GridSquare. The model does not validate or convert this field.</value>
         public string MY_GRIDSQUARE { get; set; }
 
-        ///Field Name : MY_IOTA
-        ///Data Type : IOTARefNo
-        ///Description : the logging station's IOTA designator, in format CC-XXX, whereCC is a member of the Continent enumeration XXX is the island group designator, where 1 <= XXX <= 999 [use leading zeroes]
+        /// <summary>Gets or sets the logging station's IOTA designator, in format CC-XXX, whereCC is a member of the Continent enumeration XXX is the island group designator, where 1 &lt;= XXX &lt;= 999 [use leading zeroes].</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IOTARefNo. The model does not validate or convert this field.</value>
         public string MY_IOTA { get; set; }
 
-        ///Field Name : MY_IOTA_ISLAND_ID
-        ///Data Type : PositiveInteger
-        ///Description : the logging station's IOTA Island Identifier, an 8-digit integer in the range 1 to 99999999 [leading zeroes optional]
+        /// <summary>Gets or sets the logging station's IOTA Island Identifier, an 8-digit integer in the range 1 to 99999999 [leading zeroes optional].</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string MY_IOTA_ISLAND_ID { get; set; }
 
-        ///Field Name : MY_ITU_ZONE
-        ///Data Type : PositiveInteger
-        ///Description : the logging station's ITU zone in the range 1 to 90 (inclusive)
+        /// <summary>Gets or sets the logging station's ITU zone in the range 1 to 90 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string MY_ITU_ZONE { get; set; }
 
-        ///Field Name : MY_LAT
-        ///Data Type : Location
-        ///Description : the logging station's latitude
+        /// <summary>Gets or sets the logging station's latitude.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Location. The model does not validate or convert this field.</value>
         public string MY_LAT { get; set; }
 
-        ///Field Name : MY_LON
-        ///Data Type : Location
-        ///Description : the logging station's longitude
+        /// <summary>Gets or sets the logging station's longitude.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Location. The model does not validate or convert this field.</value>
         public string MY_LON { get; set; }
 
-        ///Field Name : MY_NAME
-        ///Data Type : String
-        ///Description : the logging operator's name
+        /// <summary>Gets or sets the logging operator's name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_NAME { get; set; }
 
-        ///Field Name : MY_NAME_INTL
-        ///Data Type : IntlString
-        ///Description : the logging operator's name
+        /// <summary>Gets or sets the logging operator's name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_NAME_INTL { get; set; }
 
-        ///Field Name : MY_POSTAL_CODE
-        ///Data Type : String
-        ///Description : the logging station's postal code
+        /// <summary>Gets or sets the logging station's postal code.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_POSTAL_CODE { get; set; }
 
-        ///Field Name : MY_POSTAL_CODE_INTL
-        ///Data Type : IntlString
-        ///Description : the logging station's postal code
+        /// <summary>Gets or sets the logging station's postal code.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_POSTAL_CODE_INTL { get; set; }
 
-        ///Field Name : MY_RIG
-        ///Data Type : String
-        ///Description : description of the logging station's equipment
+        /// <summary>Gets or sets description of the logging station's equipment.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_RIG { get; set; }
 
-        ///Field Name : MY_RIG_INTL
-        ///Data Type : IntlString
-        ///Description : description of the logging station's equipment
+        /// <summary>Gets or sets description of the logging station's equipment.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_RIG_INTL { get; set; }
 
-        ///Field Name : MY_SIG
-        ///Data Type : String
-        ///Description : special interest activity or event
+        /// <summary>Gets or sets special interest activity or event.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_SIG { get; set; }
 
-        ///Field Name : MY_SIG_INTL
-        ///Data Type : IntlString
-        ///Description : special interest activity or event
+        /// <summary>Gets or sets special interest activity or event.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_SIG_INTL { get; set; }
 
-        ///Field Name : MY_SIG_INFO
-        ///Data Type : String
-        ///Description : special interest activity or event information
+        /// <summary>Gets or sets special interest activity or event information.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_SIG_INFO { get; set; }
 
-        ///Field Name : MY_SIG_INFO_INTL
-        ///Data Type : IntlString
-        ///Description : special interest activity or event information
+        /// <summary>Gets or sets special interest activity or event information.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_SIG_INFO_INTL { get; set; }
 
-        ///Field Name : MY_SOTA_REF
-        ///Data Type : SOTARef
-        ///Description : the logging station's International SOTA Reference.
+        /// <summary>Gets or sets the logging station's International SOTA Reference.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SOTARef. The model does not validate or convert this field.</value>
         public string MY_SOTA_REF { get; set; }
 
-        ///Field Name : MY_STATE
-        ///Data Type : Enumeration
-        ///Enumeration : (Primary Administrative Subdivision, function of MY_DXCC field's value)
-        ///Description : the code for the logging station's Primary Administrative Subdivision (e.g. US State, JA Island, VE Province)
+        /// <summary>Gets or sets the code for the logging station's Primary Administrative Subdivision (e.g. US State, JA Island, VE Province).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : (Primary Administrative Subdivision, function of MY_DXCC field's value)</remarks>
         public string MY_STATE { get; set; }
 
-        ///Field Name : MY_STREET
-        ///Data Type : String
-        ///Description : the logging station's street
+        /// <summary>Gets or sets the logging station's street.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string MY_STREET { get; set; }
 
-        ///Field Name : MY_STREET_INTL
-        ///Data Type : IntlString
-        ///Description : the logging station's street
+        /// <summary>Gets or sets the logging station's street.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string MY_STREET_INTL { get; set; }
 
-        ///Field Name : MY_USACA_COUNTIES
-        ///Data Type : SecondarySubdivisionList
-        ///Description : two US counties in the case where the logging station is located on a border between two counties, representing counties that the contacted station may claim for the CQ Magazine USA-CA award program. E.g.  MA,Franklin:MA,Hampshire
+        /// <summary>Gets or sets two US counties in the case where the logging station is located on a border between two counties, representing counties that the contacted station may claim for the CQ Magazine USA-CA award program. E.g.  MA,Franklin:MA,Hampshire.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SecondarySubdivisionList. The model does not validate or convert this field.</value>
         public string MY_USACA_COUNTIES { get; set; }
 
-        ///Field Name : MY_VUCC_GRIDS
-        ///Data Type : GridSquareList
-        ///Description : two or four adjacent Maidenhead grid locators, each four characters long, representing the logging station's grid squares that the contacted station may claim for the ARRL VUCC award program. E.g.  EN98,FM08,EM97,FM07
+        /// <summary>Gets or sets two or four adjacent Maidenhead grid locators, each four characters long, representing the logging station's grid squares that the contacted station may claim for the ARRL VUCC award program. E.g.  EN98,FM08,EM97,FM07.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: GridSquareList. The model does not validate or convert this field.</value>
         public string MY_VUCC_GRIDS { get; set; }
 
-        ///Field Name : NAME
-        ///Data Type : String
-        ///Description : the contacted station's operator's name
+        /// <summary>Gets or sets the contacted station's operator's name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string NAME { get; set; }
 
-        ///Field Name : NAME_INTL
-        ///Data Type : IntlString
-        ///Description : the contacted station's operator's name
+        /// <summary>Gets or sets the contacted station's operator's name.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string NAME_INTL { get; set; }
 
-        ///Field Name : NOTES
-        ///Data Type : MultilineString
-        ///Description : QSO notes
+        /// <summary>Gets or sets QSO notes.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: MultilineString. The model does not validate or convert this field.</value>
         public string NOTES { get; set; }
 
-        ///Field Name : NOTES_INTL
-        ///Data Type : IntlMultilineString
-        ///Description : QSO notes
+        /// <summary>Gets or sets QSO notes.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlMultilineString. The model does not validate or convert this field.</value>
         public string NOTES_INTL { get; set; }
 
-        ///Field Name : NR_BURSTS
-        ///Data Type : Integer
-        ///Description : the number of meteor scatter bursts heard by the logging station with a value greater than or equal to 0
+        /// <summary>Gets or sets the number of meteor scatter bursts heard by the logging station with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string NR_BURSTS { get; set; }
 
-        ///Field Name : NR_PINGS
-        ///Data Type : Integer
-        ///Description : the number of meteor scatter pings heard by the logging station with a value greater than or equal to 0
+        /// <summary>Gets or sets the number of meteor scatter pings heard by the logging station with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string NR_PINGS { get; set; }
 
-        ///Field Name : OPERATOR
-        ///Data Type : String
-        ///Description : the logging operator's callsignif STATION_CALLSIGN is absent, OPERATOR shall be treated as both the logging station's callsign and the logging operator's callsign
+        /// <summary>Gets or sets the logging operator's callsignif STATION_CALLSIGN is absent, OPERATOR shall be treated as both the logging station's callsign and the logging operator's callsign.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string OPERATOR { get; set; }
 
-        ///Field Name : OWNER_CALLSIGN
-        ///Data Type : String
-        ///Description : the callsign of the owner of the station used to log the contact (the callsign of the OPERATOR's host)if OWNER_CALLSIGN is absent, STATION_CALLSIGN shall be treated as both the logging station's callsign and the callsign of the owner of the station
+        /// <summary>Gets or sets the callsign of the owner of the station used to log the contact (the callsign of the OPERATOR's host)if OWNER_CALLSIGN is absent, STATION_CALLSIGN shall be treated as both the logging station's callsign and the callsign of the owner of the station.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string OWNER_CALLSIGN { get; set; }
 
-        ///Field Name : PFX
-        ///Data Type : String
-        ///Description : the contacted station's WPX prefix
+        /// <summary>Gets or sets the contacted station's WPX prefix.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string PFX { get; set; }
 
-        ///Field Name : PRECEDENCE
-        ///Data Type : String
-        ///Description : contest precedence (e.g. for ARRL Sweepstakes)
+        /// <summary>Gets or sets contest precedence (e.g. for ARRL Sweepstakes).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string PRECEDENCE { get; set; }
 
-        ///Field Name : PROP_MODE
-        ///Data Type : Enumeration
-        ///Enumeration : Propagation Mode
-        ///Description : QSO propagation mode
+        /// <summary>Gets or sets QSO propagation mode.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Propagation Mode</remarks>
         public string PROP_MODE { get; set; }
 
-        ///Field Name : PUBLIC_KEY
-        ///Data Type : String
-        ///Description : public encryption key
+        /// <summary>Gets or sets public encryption key.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string PUBLIC_KEY { get; set; }
 
-        ///Field Name : QRZCOM_QSO_UPLOAD_DATE
-        ///Data Type : Date
-        ///Description : the date the QSO was last uploaded to the QRZ.COM online service
+        /// <summary>Gets or sets the date the QSO was last uploaded to the QRZ.COM online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string QRZCOM_QSO_UPLOAD_DATE { get; set; }
 
-        ///Field Name : QRZCOM_QSO_UPLOAD_STATUS
-        ///Data Type : Enumeration
-        ///Enumeration : QSO Upload Status
-        ///Description : the upload status of the QSO on the QRZ.COM online service
+        /// <summary>Gets or sets the upload status of the QSO on the QRZ.COM online service.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSO Upload Status</remarks>
         public string QRZCOM_QSO_UPLOAD_STATUS { get; set; }
 
-        ///Field Name : QSLMSG
-        ///Data Type : MultilineString
-        ///Description : QSL card message
+        /// <summary>Gets or sets QSL card message.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: MultilineString. The model does not validate or convert this field.</value>
         public string QSLMSG { get; set; }
 
-        ///Field Name : QSLMSG_INTL
-        ///Data Type : IntlMultilineString
-        ///Description : QSL card message
+        /// <summary>Gets or sets QSL card message.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlMultilineString. The model does not validate or convert this field.</value>
         public string QSLMSG_INTL { get; set; }
 
-        ///Field Name : QSLRDATE
-        ///Data Type : Date
-        ///Description : QSL received date(only valid if QSL_RCVD is Y, I, or V) (V import-only)
+        /// <summary>Gets or sets QSL received date(only valid if QSL_RCVD is Y, I, or V) (V import-only).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string QSLRDATE { get; set; }
 
-        ///Field Name : QSLSDATE
-        ///Data Type : Date
-        ///Description : QSL sent date(only valid if QSL_SENT is Y, Q, or I)
+        /// <summary>Gets or sets QSL sent date(only valid if QSL_SENT is Y, Q, or I).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string QSLSDATE { get; set; }
 
-        ///Field Name : QSL_RCVD
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Rcvd
-        ///Description : QSL received status  instead of V (import-only) use <CREDIT_GRANTED:39>DXCC:card,DXCC_BAND:card,DXCC_MODE:card  Default Value: N
+        /// <summary>Gets or sets QSL received status  instead of V (import-only) use &lt;CREDIT_GRANTED:39&gt;DXCC:card,DXCC_BAND:card,DXCC_MODE:card  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Rcvd</remarks>
         public string QSL_RCVD { get; set; }
 
-        ///Field Name : QSL_RCVD_VIA
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Via
-        ///Description : means by which the QSL was received by the logging station  use of M (manager) is import-only
+        /// <summary>Gets or sets means by which the QSL was received by the logging station  use of M (manager) is import-only.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Via</remarks>
         public string QSL_RCVD_VIA { get; set; }
 
-        ///Field Name : QSL_SENT
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Sent
-        ///Description : QSL sent status  Default Value: N
+        /// <summary>Gets or sets QSL sent status  Default Value: N.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Sent</remarks>
         public string QSL_SENT { get; set; }
 
-        ///Field Name : QSL_SENT_VIA
-        ///Data Type : Enumeration
-        ///Enumeration : QSL Via
-        ///Description : means by which the QSL was sent by the logging station  use of M (manager) is import-only
+        /// <summary>Gets or sets means by which the QSL was sent by the logging station  use of M (manager) is import-only.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSL Via</remarks>
         public string QSL_SENT_VIA { get; set; }
 
-        ///Field Name : QSL_VIA
-        ///Data Type : String
-        ///Description : the contacted station's QSL route
+        /// <summary>Gets or sets the contacted station's QSL route.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string QSL_VIA { get; set; }
 
-        ///Field Name : QSO_COMPLETE
-        ///Data Type : Enumeration
-        ///Enumeration : QSO Complete
-        ///Description : indicates whether the QSO was complete from the perspective of the logging stationY - yes N - no NIL - not heard ? - uncertain
+        /// <summary>Gets or sets indicates whether the QSO was complete from the perspective of the logging stationY - yes N - no NIL - not heard ? - uncertain.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : QSO Complete</remarks>
         public string QSO_COMPLETE { get; set; }
 
-        ///Field Name : QSO_DATE
-        ///Data Type : Date
-        ///Description : date on which the QSO started
+        /// <summary>Gets or sets date on which the QSO started.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string QSO_DATE { get; set; }
 
-        ///Field Name : QSO_DATE_OFF
-        ///Data Type : Date
-        ///Description : date on which the QSO ended
+        /// <summary>Gets or sets date on which the QSO ended.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Date. The model does not validate or convert this field.</value>
         public string QSO_DATE_OFF { get; set; }
 
-        ///Field Name : QSO_RANDOM
-        ///Data Type : Boolean
-        ///Description : indicates whether the QSO was random or scheduled
+        /// <summary>Gets or sets indicates whether the QSO was random or scheduled.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Boolean. The model does not validate or convert this field.</value>
         public string QSO_RANDOM { get; set; }
 
-        ///Field Name : QTH
-        ///Data Type : String
-        ///Description : the contacted station's city
+        /// <summary>Gets or sets the contacted station's city.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string QTH { get; set; }
 
-        ///Field Name : QTH_INTL
-        ///Data Type : IntlString
-        ///Description : the contacted station's city
+        /// <summary>Gets or sets the contacted station's city.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string QTH_INTL { get; set; }
 
-        ///Field Name : REGION
-        ///Data Type : Enumeration
-        ///Enumeration : Region
-        ///Description : the contacted station's WAE or CQ entity contained within a DXCC entity.the value None indicates that the WAE or CQ entity is the DXCC entity in the DXCC field. nothing can be inferred from the absence of the REGION field
+        /// <summary>Gets or sets the contacted station's WAE or CQ entity contained within a DXCC entity.the value None indicates that the WAE or CQ entity is the DXCC entity in the DXCC field. nothing can be inferred from the absence of the REGION field.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Region</remarks>
         public string REGION { get; set; }
 
-        ///Field Name : RIG
-        ///Data Type : MultilineString
-        ///Description : description of the contacted station's equipment
+        /// <summary>Gets or sets description of the contacted station's equipment.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: MultilineString. The model does not validate or convert this field.</value>
         public string RIG { get; set; }
 
-        ///Field Name : RIG_INTL
-        ///Data Type : IntlMultilineString
-        ///Description : description of the contacted station's equipment
+        /// <summary>Gets or sets description of the contacted station's equipment.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlMultilineString. The model does not validate or convert this field.</value>
         public string RIG_INTL { get; set; }
 
-        ///Field Name : RST_RCVD
-        ///Data Type : String
-        ///Description : signal report from the contacted station
+        /// <summary>Gets or sets signal report from the contacted station.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string RST_RCVD { get; set; }
 
-        ///Field Name : RST_SENT
-        ///Data Type : String
-        ///Description : signal report sent to the contacted station
+        /// <summary>Gets or sets signal report sent to the contacted station.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string RST_SENT { get; set; }
 
-        ///Field Name : RX_PWR
-        ///Data Type : Number
-        ///Description : the contacted station's transmitter power in Watts with a value greater than 0
+        /// <summary>Gets or sets the contacted station's transmitter power in Watts with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string RX_PWR { get; set; }
 
-        ///Field Name : SAT_MODE
-        ///Data Type : String
-        ///Description : satellite mode
+        /// <summary>Gets or sets satellite mode.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SAT_MODE { get; set; }
 
-        ///Field Name : SAT_NAME
-        ///Data Type : String
-        ///Description : name of satellite
+        /// <summary>Gets or sets name of satellite.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SAT_NAME { get; set; }
 
-        ///Field Name : SFI
-        ///Data Type : Integer
-        ///Description : the solar flux at the time of the QSO in the range 0 to 300 (inclusive).
+        /// <summary>Gets or sets the solar flux at the time of the QSO in the range 0 to 300 (inclusive).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string SFI { get; set; }
 
-        ///Field Name : SIG
-        ///Data Type : String
-        ///Description : the name of the contacted station's special activity or interest group
+        /// <summary>Gets or sets the name of the contacted station's special activity or interest group.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SIG { get; set; }
 
-        ///Field Name : SIG_INTL
-        ///Data Type : IntlString
-        ///Description : the name of the contacted station's special activity or interest group
+        /// <summary>Gets or sets the name of the contacted station's special activity or interest group.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string SIG_INTL { get; set; }
 
-        ///Field Name : SIG_INFO
-        ///Data Type : String
-        ///Description : information associated with the contacted station's activity or interest group
+        /// <summary>Gets or sets information associated with the contacted station's activity or interest group.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SIG_INFO { get; set; }
 
-        ///Field Name : SIG_INFO_INTL
-        ///Data Type : IntlString
-        ///Description : information associated with the contacted station's activity or interest group
+        /// <summary>Gets or sets information associated with the contacted station's activity or interest group.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: IntlString. The model does not validate or convert this field.</value>
         public string SIG_INFO_INTL { get; set; }
 
-        ///Field Name : SILENT_KEY
-        ///Data Type : Boolean
-        ///Description : Y' indicates that the contacted station's operator is now a Silent Key.
+        /// <summary>Gets or sets Y' indicates that the contacted station's operator is now a Silent Key.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Boolean. The model does not validate or convert this field.</value>
         public string SILENT_KEY { get; set; }
 
-        ///Field Name : SKCC
-        ///Data Type : String
-        ///Description : the contacted station's Straight Key Century Club (SKCC) member information
+        /// <summary>Gets or sets the contacted station's Straight Key Century Club (SKCC) member information.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SKCC { get; set; }
 
-        ///Field Name : SOTA_REF
-        ///Data Type : SOTARef
-        ///Description : the contacted station's International SOTA Reference.
+        /// <summary>Gets or sets the contacted station's International SOTA Reference.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SOTARef. The model does not validate or convert this field.</value>
         public string SOTA_REF { get; set; }
 
-        ///Field Name : SRX
-        ///Data Type : Integer
-        ///Description : contest QSO received serial number with a value greater than or equal to 0
+        /// <summary>Gets or sets contest QSO received serial number with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string SRX { get; set; }
 
-        ///Field Name : SRX_STRING
-        ///Data Type : String
-        ///Description : contest QSO received informationuse Cabrillo format to convey contest information for which ADIF fields are not specified in the event of a conflict between information in a dedicated contest field and this field, information in the dedicated contest field shall prevail
+        /// <summary>Gets or sets contest QSO received informationuse Cabrillo format to convey contest information for which ADIF fields are not specified in the event of a conflict between information in a dedicated contest field and this field, information in the dedicated contest field shall prevail.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string SRX_STRING { get; set; }
 
-        ///Field Name : STATE
-        ///Data Type : Enumeration
-        ///Enumeration : (Primary Administrative Subdivision, function of DXCC field's value)
-        ///Description : the code for the contacted station's Primary Administrative Subdivision (e.g. US State, JA Island, VE Province)
+        /// <summary>Gets or sets the code for the contacted station's Primary Administrative Subdivision (e.g. US State, JA Island, VE Province).</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Enumeration. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : (Primary Administrative Subdivision, function of DXCC field's value)</remarks>
         public string STATE { get; set; }
 
-        ///Field Name : STATION_CALLSIGN
-        ///Data Type : String
-        ///Description : the logging station's callsign (the callsign used over the air)if STATION_CALLSIGN is absent, OPERATOR shall be treated as both the logging station's callsign and the logging operator's callsign
+        /// <summary>Gets or sets the logging station's callsign (the callsign used over the air)if STATION_CALLSIGN is absent, OPERATOR shall be treated as both the logging station's callsign and the logging operator's callsign.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string STATION_CALLSIGN { get; set; }
 
-        ///Field Name : STX
-        ///Data Type : Integer
-        ///Description : contest QSO transmitted serial number with a value greater than or equal to 0
+        /// <summary>Gets or sets contest QSO transmitted serial number with a value greater than or equal to 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Integer. The model does not validate or convert this field.</value>
         public string STX { get; set; }
 
-        ///Field Name : STX_STRING
-        ///Data Type : String
-        ///Description : contest QSO transmitted informationuse Cabrillo format to convey contest information for which ADIF fields are not specified in the event of a conflict between information in a dedicated contest field and this field, information in the dedicated contest field shall prevail
+        /// <summary>Gets or sets contest QSO transmitted informationuse Cabrillo format to convey contest information for which ADIF fields are not specified in the event of a conflict between information in a dedicated contest field and this field, information in the dedicated contest field shall prevail.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string STX_STRING { get; set; }
 
-        ///Field Name : SUBMODE
-        ///Data Type : String
-        ///Enumeration : Submode (function of MODE field's value)
-        ///Description : QSO Submode  use enumeration values for interoperability
+        /// <summary>Gets or sets QSO Submode  use enumeration values for interoperability.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
+        /// <remarks>Enumeration : Submode (function of MODE field's value)</remarks>
         public string SUBMODE { get; set; }
 
-        ///Field Name : SWL
-        ///Data Type : Boolean
-        ///Description : indicates that the QSO information pertains to an SWL report
+        /// <summary>Gets or sets indicates that the QSO information pertains to an SWL report.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Boolean. The model does not validate or convert this field.</value>
         public string SWL { get; set; }
 
-        ///Field Name : TEN_TEN
-        ///Data Type : PositiveInteger
-        ///Description : Ten-Ten number with a value greater than 0
+        /// <summary>Gets or sets Ten-Ten number with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string TEN_TEN { get; set; }
 
-        ///Field Name : TIME_OFF
-        ///Data Type : Time
-        ///Description : HHMM or HHMMSS in UTCin the absence of <QSO_DATE_OFF>, the QSO duration is less than 24 hours
+        /// <summary>Gets or sets HHMM or HHMMSS in UTCin the absence of &lt;QSO_DATE_OFF&gt;, the QSO duration is less than 24 hours.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Time. The model does not validate or convert this field.</value>
         public string TIME_OFF { get; set; }
 
-        ///Field Name : TIME_ON
-        ///Data Type : Time
-        ///Description : HHMM or HHMMSS in UTC
+        /// <summary>Gets or sets HHMM or HHMMSS in UTC.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Time. The model does not validate or convert this field.</value>
         public string TIME_ON { get; set; }
 
-        ///Field Name : TX_PWR
-        ///Data Type : Number
-        ///Description : the logging station's power in Watts with a value greater than 0
+        /// <summary>Gets or sets the logging station's power in Watts with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: Number. The model does not validate or convert this field.</value>
         public string TX_PWR { get; set; }
 
-        ///Field Name : UKSMG
-        ///Data Type : PositiveInteger
-        ///Description : the contacted station's UKSMG member number with a value greater than 0
+        /// <summary>Gets or sets the contacted station's UKSMG member number with a value greater than 0.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: PositiveInteger. The model does not validate or convert this field.</value>
         public string UKSMG { get; set; }
 
-        ///Field Name : USACA_COUNTIES
-        ///Data Type : SecondarySubdivisionList
-        ///Description : two US counties in the case where the contacted station is located on a border between two counties, representing counties credited to the QSO for the CQ Magazine USA-CA award program. E.g.  MA,Franklin:MA,Hampshire
+        /// <summary>Gets or sets two US counties in the case where the contacted station is located on a border between two counties, representing counties credited to the QSO for the CQ Magazine USA-CA award program. E.g.  MA,Franklin:MA,Hampshire.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: SecondarySubdivisionList. The model does not validate or convert this field.</value>
         public string USACA_COUNTIES { get; set; }
 
-        ///Field Name : VE_PROV
-        ///Data Type : String
-        ///Description : import-only: use STATE instead
+        /// <summary>Gets or sets import-only: use STATE instead.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string VE_PROV { get; set; }
 
-        ///Field Name : VUCC_GRIDS
-        ///Data Type : GridSquareList
-        ///Description : two or four adjacent Maidenhead grid locators, each four characters long, representing the contacted station's grid squares credited to the QSO for the ARRL VUCC award program. E.g.  EN98,FM08,EM97,FM07
+        /// <summary>Gets or sets two or four adjacent Maidenhead grid locators, each four characters long, representing the contacted station's grid squares credited to the QSO for the ARRL VUCC award program. E.g.  EN98,FM08,EM97,FM07.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: GridSquareList. The model does not validate or convert this field.</value>
         public string VUCC_GRIDS { get; set; }
 
-        ///Field Name : WEB
-        ///Data Type : String
-        ///Description : the contacted station's URL
+        /// <summary>Gets or sets the contacted station's URL.</summary>
+        /// <value>Raw ADIF text; null when absent. ADIF data type: String. The model does not validate or convert this field.</value>
         public string WEB { get; set; }
     }
 }

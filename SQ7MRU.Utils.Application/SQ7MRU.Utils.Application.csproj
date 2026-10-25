@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><IsPackable>false</IsPackable></PropertyGroup>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../SQ7MRU.Utils.Core/SQ7MRU.Utils.Core.csproj" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />

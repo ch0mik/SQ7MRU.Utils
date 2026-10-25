@@ -12,6 +12,7 @@ public class ReviewRegressionTests
     [Theory]
     [InlineData(Architecture.X64, 0xb0000, 0x20000)]
     [InlineData(Architecture.Arm64, 0x8c000, 0x8000)]
+    [InlineData(Architecture.Arm, 0x8c000, 0x8000)]
     public void LinuxDirectoryFlagsFollowTheTargetKernelAbi(Architecture architecture, int directory, int noFollow)
     {
         // Values are the architecture-specific Linux UAPI contract, checked even

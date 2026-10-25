@@ -2,8 +2,15 @@ using System.Text;
 
 namespace SQ7MRU.Utils.Infrastructure;
 
+/// <summary>Validates certificate/ADIF payloads and persists them through confined atomic filesystem operations.</summary>
+/// <remarks>State is stored in files, not this instance. Certificate ZIPs use a bounded SQLite index beneath the selected root. Images are decoded; opted-in PDFs receive structural checks, not rendering or active-content sanitization.</remarks>
 public sealed class ArtifactStore : IArtifactStore
 {
+    /// <summary>Replaces invalid filename characters and trims surrounding spaces and dots.</summary>
+    /// <param name="name">One service-provided filename component, not an arbitrary trusted output path.</param>
+    /// <returns>A nonempty sanitized component; this is not a uniqueness guarantee.</returns>
+    /// <exception cref="ServiceException">Sanitization leaves no usable filename.</exception>
+    /// <remarks>Both slash forms, control characters and Windows-invalid characters are replaced on every OS. Storage separately enforces path confinement and link rejection.</remarks>
     public static string SafeName(string name)
     {
         var invalid = Path.GetInvalidFileNameChars().Concat("<>:\"/\\|?*").ToHashSet();
@@ -22,6 +29,16 @@ public sealed class ArtifactStore : IArtifactStore
         return path;
     }
 
+    /// <summary>Checks a saved file or every certificate in an indexed bundle before allowing a skip.</summary>
+    /// <param name="directory">Selected output root; it need not exist for a negative result.</param>
+    /// <param name="item">Logical path and explicitly permitted content formats.</param>
+    /// <param name="cancellationToken">Cancels payload reads, index-lock waiting and bundle validation.</param>
+    /// <returns>True if suitable local content passes validation; false when it is absent or its content is invalid.</returns>
+    /// <exception cref="ServiceException">A path is unsafe or SQLite metadata is invalid.</exception>
+    /// <exception cref="IOException">A filesystem or index-lock operation fails.</exception>
+    /// <exception cref="UnauthorizedAccessException">Local content cannot be accessed.</exception>
+    /// <exception cref="OperationCanceledException">Caller cancellation is requested.</exception>
+    /// <remarks>Detected PNG/GIF/JPEG and permitted PDF alternatives are considered. Legacy JSON migration can write metadata here. ADIF validation checks markers rather than parsing records; download orchestration still refreshes ADIF regardless of this result.</remarks>
     public async Task<bool> IsValidAsync(string directory, DownloadItem item, CancellationToken cancellationToken)
     {
         IEnumerable<string> candidates = item.IsAdif ? new[] { item.RelativePath } : new[]
@@ -51,6 +68,17 @@ public sealed class ArtifactStore : IArtifactStore
             await ImageArchiveStore.IsValidAsync(this, directory, item, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>Validates and saves an artifact, detecting its real extension or extracting an opted-in ZIP.</summary>
+    /// <param name="directory">Selected output root; required subdirectories are created beneath it.</param>
+    /// <param name="item">Logical output path, with ADIF/archive/PDF behavior explicitly permitted by its flags.</param>
+    /// <param name="content">Complete encoded response bytes; HTML and invalid expected content are rejected.</param>
+    /// <param name="cancellationToken">Cancels pending writes and prevents replacement if observed before commit.</param>
+    /// <returns>The root-relative saved filename, or the containing group directory for a ZIP selection.</returns>
+    /// <exception cref="ServiceException">Validation, confinement or bundle-index checks fail.</exception>
+    /// <exception cref="IOException">Writing, replacement or index locking fails.</exception>
+    /// <exception cref="UnauthorizedAccessException">Output is not writable.</exception>
+    /// <exception cref="OperationCanceledException">Caller cancellation is requested.</exception>
+    /// <remarks>Encoded files are limited to 32 MiB. ZIPs permit 1–128 flat regular entries and at most 64 MiB expanded content. Every entry is validated before writes; files are replaced individually and SQLite metadata is committed last, so cancellation can leave committed members. Existing destination files are replaced only after valid content has been prepared.</remarks>
     public async Task<string> SaveAsync(string directory, DownloadItem item, byte[] content, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

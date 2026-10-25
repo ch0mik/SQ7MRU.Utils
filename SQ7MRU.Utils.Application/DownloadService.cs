@@ -4,14 +4,37 @@ using Microsoft.Extensions.Options;
 
 namespace SQ7MRU.Utils;
 
+/// <summary>Controls worker concurrency for the built-in download use case.</summary>
+/// <remarks>Configure through AddSq7MruUtils. DI validation requires every configured concurrency to be between 1 and 32.</remarks>
 public sealed class DownloadOptions
 {
+    /// <summary>Gets or sets the fallback maximum number of concurrent item workers. Defaults to two.</summary>
     public int MaxConcurrency { get; set; } = 2;
+    /// <summary>Gets or sets service-specific worker limits; an eQSL override of one is provided by default.</summary>
+    /// <remarks>A registered override takes precedence over <see cref="MaxConcurrency"/>. Do not mutate options while a job runs.</remarks>
     public Dictionary<QslService, int> MaxConcurrencyByService { get; set; } = new() { [QslService.Eqsl] = 1 };
 }
+/// <summary>Implements streaming discovery, bounded worker execution and partial-result aggregation.</summary>
+/// <param name="factories">Factories with one registration for each supported service.</param>
+/// <param name="store">Storage adapter used to validate and atomically persist payloads.</param>
+/// <param name="options">Validated concurrency settings.</param>
+/// <param name="logger">Receives classified failure events without credentials or payloads.</param>
+/// <remarks>Prefer resolving <see cref="IDownloadService"/> from the service provider. Each call owns and asynchronously disposes its session after all workers finish.</remarks>
 public sealed class DownloadService(IEnumerable<IDownloadSessionFactory> factories, IArtifactStore store,
     IOptions<DownloadOptions> options, ILogger<DownloadService> logger) : IDownloadService
 {
+    /// <summary>Discovers and processes download selections, skipping valid local content unless refresh is required.</summary>
+    /// <param name="request">Service, credentials, output root and optional eQSL account.</param>
+    /// <param name="progress">Optional receiver; callbacks can originate from concurrent workers and should not throw.</param>
+    /// <param name="cancellationToken">Cancels discovery, worker requests, service waits and persistence.</param>
+    /// <returns>Completed logical-selection outcomes sorted by name; inspect the failed count for partial failure.</returns>
+    /// <exception cref="ArgumentNullException">Request or credentials are null.</exception>
+    /// <exception cref="ArgumentException">Login or output directory is blank.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">The service has no registered factory.</exception>
+    /// <exception cref="InvalidOperationException">More than one factory is registered for the service.</exception>
+    /// <exception cref="ServiceException">Authentication fails or session opening fails.</exception>
+    /// <exception cref="OperationCanceledException">Caller cancellation stops the operation after worker cleanup.</exception>
+    /// <remarks>ADIF exports always refresh. A non-authentication per-item service error becomes a failed item. A discovery error adds a discovery failure after prior work finishes. One ZIP selection counts once even if it writes several certificates. Cancellation and fatal errors do not return a final result.</remarks>
     public async Task<DownloadResult> DownloadAsync(DownloadRequest request,
         IProgress<DownloadProgress>? progress = null, CancellationToken cancellationToken = default)
     {

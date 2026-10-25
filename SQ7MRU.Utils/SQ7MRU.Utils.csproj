@@ -9,6 +9,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
     <PackageTags>HamRadio;ADIF;eQSL;EPC;HRDLog</PackageTags>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
@@ -23,12 +25,14 @@
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
     <PackageReference Include="StbImageSharp" Version="2.30.16" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
-    <None Include="../README.md" Pack="true" PackagePath="/" />
+    <None Update="README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
   <Target Name="IncludeLayers">
     <ItemGroup>
       <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Core.dll" />
       <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Application.dll" />
+      <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Core.xml" />
+      <BuildOutputInPackage Include="$(TargetDir)SQ7MRU.Utils.Application.xml" />
     </ItemGroup>
   </Target>
 </Project>

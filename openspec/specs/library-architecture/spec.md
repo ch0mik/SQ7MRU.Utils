@@ -44,6 +44,21 @@ The library SHALL expose Task-based download, eQSL account listing and ADIF uplo
 - **WHEN** a credentials object is converted to a string
 - **THEN** the result is a redacted placeholder
 
+### Requirement: Public XML API comments
+
+Handwritten public API declarations in Core, Application and the library SHALL carry XML comments directly in source. Public methods SHALL describe behavior, parameters, results where applicable, cancellation, failures and relevant ownership/replay rules. Missing public comments MUST fail the library build. ADIF field descriptions SHALL state their raw string representation and validation limits.
+
+#### Scenario: Public method added
+
+- **WHEN** a handwritten public declaration lacks an XML documentation comment
+- **THEN** compiler diagnostic CS1591 fails that library project build
+
+#### Scenario: Agent consumes API descriptions
+
+- **WHEN** an IDE or agent reads the installed package documentation
+- **THEN** summaries and method contracts are available in the XML files generated from the adjacent source comments
+- **AND** internal generated helpers are not treated as public API contracts
+
 ## Implementation references
 
 - [SQ7MRU.Utils.Core/Contracts.cs](../../../SQ7MRU.Utils.Core/Contracts.cs)
