@@ -15,6 +15,16 @@ SQ7MRU.Downloader SHALL use Avalonia and MVVM and present English labels and sta
 - **WHEN** the desktop application starts
 - **THEN** the form presents service, login, password, output-directory and eQSL account controls in English
 
+### Requirement: Technical directory configuration
+
+SQ7MRU.Downloader SHALL resolve technical storage configuration at startup through the library's options. SQ7MRU_TECHNICAL_DIRECTORY MAY override the default directory name without changing graphical-card paths.
+
+#### Scenario: Technical directory override
+
+- **WHEN** the process starts with SQ7MRU_TECHNICAL_DIRECTORY set to a valid name
+- **THEN** the composition root configures ArtifactStorageOptions before resolving the view model and services
+- **AND** changing this environment variable requires restarting the application to use the new value
+
 ### Requirement: Account selection before eQSL download
 
 Starting eQSL without loaded accounts SHALL first load the account list and wait for the user to start again. Starting without a selected account SHALL NOT begin downloading.

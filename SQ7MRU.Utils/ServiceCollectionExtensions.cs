@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
         Action<DownloadOptions>? configureDownloads = null, Action<ServiceHttpOptions>? configureHttp = null)
     {
         services.AddLogging();
+        services.AddOptions<ArtifactStorageOptions>().Validate(
+            o => ArtifactStorageOptions.IsValidDirectoryName(o.TechnicalDirectoryName),
+            "The technical directory must be a safe single directory name.");
         services.AddOptions<DownloadOptions>().Validate(o => o.MaxConcurrency is >= 1 and <= 32 &&
             o.MaxConcurrencyByService is not null && o.MaxConcurrencyByService.All(x => Enum.IsDefined(x.Key) && x.Value is >= 1 and <= 32),
             "Concurrency settings must be between 1 and 32 for supported services.");

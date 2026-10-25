@@ -192,15 +192,19 @@ public class ServiceIntegrationTests
     }
     private static HttpResponseMessage Html(string html) => new(HttpStatusCode.OK) { Content = new StringContent(html) };
     private static HttpResponseMessage Jpeg() => new(HttpStatusCode.OK) { Content = new ByteArrayContent(TestImages.Jpeg) };
-    private static ServiceProvider Provider(IServiceHttpSessionFactory factory) => new ServiceCollection()
-        .AddSingleton(factory).AddSq7MruUtils().BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
+    private static ServiceProvider Provider(IServiceHttpSessionFactory factory,
+        string technicalDirectoryName = ArtifactStorageOptions.DefaultTechnicalDirectoryName) => new ServiceCollection()
+        .AddSingleton(factory)
+        .Configure<ArtifactStorageOptions>(options => options.TechnicalDirectoryName = technicalDirectoryName)
+        .AddSq7MruUtils().BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true });
 
     [Theory]
-    [InlineData("downloadedfiles/test.adi", "/qslcard/downloadedfiles/test.adi")]
-    [InlineData("../downloadedfiles/test.adi?key=a&amp;format=adif", "/downloadedfiles/test.adi")]
-    [InlineData("/exports/downloadedfiles/test.adi", "/exports/downloadedfiles/test.adi")]
-    [InlineData("https://eqsl.cc/exports/downloadedfiles/test.adi?key=a", "/exports/downloadedfiles/test.adi")]
-    public async Task EqslSeparatesAccountsAndDownloadsAdifAndImages(string link, string expectedPath)
+    [InlineData("downloadedfiles/test.adi", "/qslcard/downloadedfiles/test.adi", ".sq7mru")]
+    [InlineData("../downloadedfiles/test.adi?key=a&amp;format=adif", "/downloadedfiles/test.adi", ".sq7mru")]
+    [InlineData("/exports/downloadedfiles/test.adi", "/exports/downloadedfiles/test.adi", ".sq7mru")]
+    [InlineData("https://eqsl.cc/exports/downloadedfiles/test.adi?key=a", "/exports/downloadedfiles/test.adi", ".sq7mru")]
+    [InlineData("downloadedfiles/test.adi", "/qslcard/downloadedfiles/test.adi", "technical-data")]
+    public async Task EqslSeparatesAccountsAndDownloadsAdifAndImages(string link, string expectedPath, string technicalDirectoryName)
     {
         var selected = new ConcurrentDictionary<int, string>();
         var imageAccounts = new ConcurrentBag<string>();
@@ -239,7 +243,7 @@ public class ServiceIntegrationTests
             throw new Exception("Unexpected fixture request");
         });
         var root = Path.Combine(Path.GetTempPath(), "sq7mru-fixture-" + Guid.NewGuid().ToString("N"));
-        await using var provider = Provider(fixture);
+        await using var provider = Provider(fixture, technicalDirectoryName);
         try
         {
             var result = await provider.GetRequiredService<IDownloadService>().DownloadAsync(new(QslService.Eqsl, new("SQ7MRU", "secret"), root));
@@ -247,10 +251,18 @@ public class ServiceIntegrationTests
             Assert.Contains("Home", imageAccounts); Assert.Contains("Field", imageAccounts);
             var exports = Directory.GetFiles(root, "*.adif", SearchOption.AllDirectories);
             Assert.Equal(2, exports.Length);
-            Assert.Contains(Path.Combine(root, ".sq7mru", "SQ7MRU_Home.adif"), exports);
-            Assert.Contains(Path.Combine(root, ".sq7mru", "SQ7MRU_Field.adif"), exports);
-            Assert.Contains(result.Items, item => item.Name == Path.Combine(".sq7mru", "SQ7MRU_Home.adif"));
+            Assert.Contains(Path.Combine(root, technicalDirectoryName, "SQ7MRU_Home.adif"), exports);
+            Assert.Contains(Path.Combine(root, technicalDirectoryName, "SQ7MRU_Field.adif"), exports);
+            Assert.Contains(result.Items, item => item.Name == Path.Combine(technicalDirectoryName, "SQ7MRU_Home.adif"));
             Assert.Equal(2, Directory.GetFiles(root, "*.jpg", SearchOption.AllDirectories).Length);
+            var store = provider.GetRequiredService<IArtifactStore>();
+            var bundle = new DownloadItem(Path.Combine("EPC", "TEST", "Award.jpg"), "", AllowImageArchive: true);
+            await store.SaveAsync(root, bundle, ImageArchiveTests.Zip(("award.jpg", TestImages.Jpeg)), default);
+            Assert.True(File.Exists(Path.Combine(root, technicalDirectoryName, "downloads.sqlite")));
+            Assert.True(File.Exists(Path.Combine(root, technicalDirectoryName, "downloads.lock")));
+            Assert.True(await store.IsValidAsync(root, bundle, default));
+            if (technicalDirectoryName != ArtifactStorageOptions.DefaultTechnicalDirectoryName)
+                Assert.False(Directory.Exists(Path.Combine(root, ArtifactStorageOptions.DefaultTechnicalDirectoryName)));
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }

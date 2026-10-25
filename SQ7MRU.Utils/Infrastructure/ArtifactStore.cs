@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.Extensions.Options;
 
 namespace SQ7MRU.Utils.Infrastructure;
 
@@ -6,6 +7,22 @@ namespace SQ7MRU.Utils.Infrastructure;
 /// <remarks>State is stored in files, not this instance. Certificate ZIPs use a bounded SQLite index beneath the selected root. Images are decoded; opted-in PDFs receive structural checks, not rendering or active-content sanitization.</remarks>
 public sealed class ArtifactStore : IArtifactStore
 {
+    internal string TechnicalDirectoryName { get; }
+
+    /// <summary>Creates a store using the default technical directory.</summary>
+    public ArtifactStore() : this(Options.Create(new ArtifactStorageOptions())) { }
+
+    /// <summary>Creates a store using the configured shared technical directory.</summary>
+    /// <param name="options">Storage options captured when the store is created.</param>
+    /// <exception cref="ArgumentNullException">Options are null.</exception>
+    /// <exception cref="ArgumentException">The technical directory is not a safe single name.</exception>
+    /// <exception cref="OptionsValidationException">Registered storage-option validation fails.</exception>
+    public ArtifactStore(IOptions<ArtifactStorageOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        TechnicalDirectoryName = ArtifactStorageOptions.ValidateDirectoryName(options.Value.TechnicalDirectoryName);
+    }
+
     /// <summary>Replaces invalid filename characters and trims surrounding spaces and dots.</summary>
     /// <param name="name">One service-provided filename component, not an arbitrary trusted output path.</param>
     /// <returns>A nonempty sanitized component; this is not a uniqueness guarantee.</returns>

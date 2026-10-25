@@ -20,7 +20,10 @@
 
 ## Technical download files
 
-- Save eQSL ADIF exports directly in `<output>/.sq7mru/`, beside `downloads.sqlite`.
+- Configure the shared technical directory through `ArtifactStorageOptions.TechnicalDirectoryName`; `.sq7mru` is only the default.
+- Allow desktop users to override it with `SQ7MRU_TECHNICAL_DIRECTORY` before startup.
+- Reject unsafe directory names and keep SQLite, its lock and ADIF exports together without migrating previous data automatically.
+- Save eQSL ADIF exports directly in `<output>/<technical-directory>/`, beside `downloads.sqlite`.
 - Keep separate `<callsign>_<QTH>.adif` filenames for each account, omitting the QTH suffix when empty.
 - Continue refreshing exports on each run while keeping newly downloaded ADIF files out of QSL image folders.
 - Leave existing exports in the previous location untouched.
@@ -28,7 +31,7 @@
 ## Documentation and validation
 
 - Update repository and package READMEs, OpenSpec, repository hygiene guidance and generated-artifact ignore rules.
-- Local Windows validation passed 107 .NET tests and six checksum-promotion tests.
+- Local Windows validation passed 121 .NET tests and six checksum-promotion tests.
 - Workflow YAML/event-boundary checks, PowerShell syntax checks and strict validation of all eight OpenSpec capabilities passed.
 - Actual platform container creation and mounted-DMG checks run on the corresponding GitHub Actions runners; local checks do not establish successful remote execution.
 

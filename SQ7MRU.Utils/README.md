@@ -67,9 +67,20 @@ Library policies differ from the general format: records without a nonblank CALL
 
 ## Downloads and storage
 
-eQSL ADIF exports are technical files saved as `<output>/.sq7mru/<callsign>_<QTH>.adif`, beside `downloads.sqlite` (the QTH suffix is omitted when empty). Graphical cards remain in their account folders. Exports are refreshed each run. Older ADIF files in card folders are not automatically moved or deleted.
+`<technical-directory>` is configured through `ArtifactStorageOptions.TechnicalDirectoryName`; `.sq7mru` is the default, not a fixed required name. Configure it once before resolving services:
 
-Valid existing certificates are skipped; ADIF exports and explicitly refresh-marked items are fetched again. Actual image/PDF extensions are detected from content. EPC archives are extracted directly into their group directory and indexed in `<output>/.sq7mru/downloads.sqlite`. Every indexed member must remain valid for a bundle to be skipped. Remote additions inside an already complete bundle are not polled automatically.
+```csharp
+using SQ7MRU.Utils.Infrastructure;
+
+services.Configure<ArtifactStorageOptions>(options =>
+    options.TechnicalDirectoryName = "technical-data");
+```
+
+The name must be one portable directory component, at most 100 characters. Paths, traversal, trailing spaces/dots and Windows device names are rejected. ADIF exports, SQLite and its lock share the configured directory. Changing it does not migrate previous files or indexes; bundles may be downloaded again until indexed there. The desktop exposes this setting through `SQ7MRU_TECHNICAL_DIRECTORY` at startup.
+
+eQSL ADIF exports are technical files saved as `<output>/<technical-directory>/<callsign>_<QTH>.adif`, beside `downloads.sqlite` (the QTH suffix is omitted when empty). Graphical cards remain in their account folders. Exports are refreshed each run. Older ADIF files in card folders are not automatically moved or deleted.
+
+Valid existing certificates are skipped; ADIF exports and explicitly refresh-marked items are fetched again. Actual image/PDF extensions are detected from content. EPC archives are extracted directly into their group directory and indexed in `<output>/<technical-directory>/downloads.sqlite`. Every indexed member must remain valid for a bundle to be skipped. Remote additions inside an already complete bundle are not polled automatically.
 
 Paths are confined to the output root and untrusted symbolic links/junctions are rejected. Files use atomic replacement. A ZIP is validated before certificate writes and its SQLite index is committed last; the whole bundle is not one filesystem transaction.
 

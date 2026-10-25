@@ -35,7 +35,7 @@ internal static class ImageArchiveStore
     internal static async Task<bool> IsValidAsync(ArtifactStore store, string directory, DownloadItem item, CancellationToken token)
     {
         var folder = Folder(item);
-        var names = await ArchiveIndex.ReadAsync(directory, item, token).ConfigureAwait(false);
+        var names = await ArchiveIndex.ReadAsync(directory, item, token, store.TechnicalDirectoryName).ConfigureAwait(false);
         var legacy = names is null;
         if (legacy)
         {
@@ -54,7 +54,7 @@ internal static class ImageArchiveStore
             if (!await store.IsValidAsync(directory, new(Path.Combine(folder, name), "", AllowPdf: item.AllowPdf), token).ConfigureAwait(false)) return false;
         }
         if (legacy)
-            await ArchiveIndex.WriteAsync(directory, item, names, token).ConfigureAwait(false);
+            await ArchiveIndex.WriteAsync(directory, item, names, token, store.TechnicalDirectoryName).ConfigureAwait(false);
         ArtifactStore.RemoveFile(directory, ManifestPath(item));
         ArtifactStore.RemoveFile(directory, ManifestPath(item, legacy: true));
         return true;
@@ -96,7 +96,7 @@ internal static class ImageArchiveStore
             var folder = Folder(item);
             foreach (var image in images)
                 await store.SaveAsync(directory, new(Path.Combine(folder, image.Name), "", AllowPdf: item.AllowPdf), image.Bytes, token).ConfigureAwait(false);
-            await ArchiveIndex.WriteAsync(directory, item, images.Select(image => image.Name).ToArray(), token).ConfigureAwait(false);
+            await ArchiveIndex.WriteAsync(directory, item, images.Select(image => image.Name).ToArray(), token, store.TechnicalDirectoryName).ConfigureAwait(false);
             ArtifactStore.RemoveFile(directory, ManifestPath(item));
             ArtifactStore.RemoveFile(directory, ManifestPath(item, legacy: true));
             return folder;

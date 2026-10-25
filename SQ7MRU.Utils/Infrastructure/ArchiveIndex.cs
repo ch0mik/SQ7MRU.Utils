@@ -9,23 +9,28 @@ namespace SQ7MRU.Utils.Infrastructure;
 // confined, atomic storage as images. Native SQLite never opens untrusted paths.
 internal static class ArchiveIndex
 {
-    internal static readonly string RelativePath = Path.Combine(".sq7mru", "downloads.sqlite");
+    internal static readonly string RelativePath = Path.Combine(ArtifactStorageOptions.DefaultTechnicalDirectoryName, "downloads.sqlite");
     private const int MaxBytes = 16 * 1024 * 1024;
     private static string Key(DownloadItem item) => item.RelativePath.Replace('\\', '/').ToUpperInvariant();
 
-    internal static Task<string[]?> ReadAsync(string directory, DownloadItem item, CancellationToken token) =>
-        AccessAsync(directory, item, null, token);
+    internal static Task<string[]?> ReadAsync(string directory, DownloadItem item, CancellationToken token,
+        string technicalDirectoryName = ArtifactStorageOptions.DefaultTechnicalDirectoryName) =>
+        AccessAsync(directory, item, null, token, technicalDirectoryName);
 
-    internal static async Task WriteAsync(string directory, DownloadItem item, string[] names, CancellationToken token) =>
-        _ = await AccessAsync(directory, item, names, token).ConfigureAwait(false);
+    internal static async Task WriteAsync(string directory, DownloadItem item, string[] names, CancellationToken token,
+        string technicalDirectoryName = ArtifactStorageOptions.DefaultTechnicalDirectoryName) =>
+        _ = await AccessAsync(directory, item, names, token, technicalDirectoryName).ConfigureAwait(false);
 
-    private static async Task<string[]?> AccessAsync(string directory, DownloadItem item, string[]? names, CancellationToken token)
+    private static async Task<string[]?> AccessAsync(string directory, DownloadItem item, string[]? names, CancellationToken token,
+        string technicalDirectoryName)
     {
         token.ThrowIfCancellationRequested();
+        ArtifactStorageOptions.ValidateDirectoryName(technicalDirectoryName);
+        var relativePath = Path.Combine(technicalDirectoryName, "downloads.sqlite");
         // A read-only miss does not create output directories or a database.
-        if (names is null && await ArtifactStore.ReadFileAsync(directory, RelativePath, MaxBytes, token, rejectOversize: true).ConfigureAwait(false) is null)
+        if (names is null && await ArtifactStore.ReadFileAsync(directory, relativePath, MaxBytes, token, rejectOversize: true).ConfigureAwait(false) is null)
             return null;
-        using var parent = new SecureArtifactDirectory(Path.Combine(Path.GetFullPath(directory), ".sq7mru"), create: true);
+        using var parent = new SecureArtifactDirectory(Path.Combine(Path.GetFullPath(directory), technicalDirectoryName), create: true);
         FileStream? lease;
         var waiting = Stopwatch.StartNew();
         while ((lease = parent.TryAcquireLock("downloads.lock")) is null)
@@ -36,11 +41,11 @@ internal static class ArchiveIndex
         }
         using (lease)
         {
-            var bytes = await ArtifactStore.ReadFileAsync(directory, RelativePath, MaxBytes, token, rejectOversize: true).ConfigureAwait(false);
+            var bytes = await ArtifactStore.ReadFileAsync(directory, relativePath, MaxBytes, token, rejectOversize: true).ConfigureAwait(false);
             // Microsoft.Data.Sqlite executes synchronously; keep that work off the UI thread.
             var result = await Task.Run(() => Execute(bytes, Key(item), names, token), token).ConfigureAwait(false);
             if (result.Bytes is not null)
-                await ArtifactStore.WriteFileAsync(directory, RelativePath, result.Bytes, token).ConfigureAwait(false);
+                await ArtifactStore.WriteFileAsync(directory, relativePath, result.Bytes, token).ConfigureAwait(false);
             return result.Names;
         }
     }

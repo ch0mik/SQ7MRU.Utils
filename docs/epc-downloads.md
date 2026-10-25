@@ -23,7 +23,7 @@ Files are written below the selected output directory:
         <certificate-name-from-archive>.jpg
       Membership certificate/
         Membership certificate.pdf
-  .sq7mru/
+  <technical-directory>/
     downloads.sqlite
     downloads.lock
 ```
@@ -42,7 +42,9 @@ This behavior deliberately does not poll an already complete bundle for new remo
 
 ## Technical index
 
-The single index `<output>/.sq7mru/downloads.sqlite` stores logical bundle paths and certificate filenames, without passwords or cookies. It can still contain callsigns and belongs outside public version control.
+`<technical-directory>` is a configurable name shared with ADIF exports. The default is `.sq7mru`; library consumers set `ArtifactStorageOptions.TechnicalDirectoryName`, and desktop users can set `SQ7MRU_TECHNICAL_DIRECTORY` before startup. Changing the name selects a new index location without migrating earlier data.
+
+The single index `<output>/<technical-directory>/downloads.sqlite` stores logical bundle paths and certificate filenames, without passwords or cookies. It can still contain callsigns and belongs outside public version control.
 
 SQLite works on an in-memory database on a worker thread. Standard SQLite snapshots are read and written through confined filesystem operations and atomic replacement. A persistent operating-system lock file serializes updates across sessions and processes; waiting supports cancellation and a 30-second timeout. The database is limited to 16 MiB. Invalid or oversized databases produce a storage error rather than being overwritten.
 

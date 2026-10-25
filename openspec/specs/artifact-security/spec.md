@@ -91,7 +91,7 @@ The store SHALL accept ZIPs only for opted-in items, with 1–128 entries, a 32 
 #### Scenario: Technical metadata is separate from certificates
 
 - **WHEN** a certificate bundle is saved or a complete legacy bundle is checked
-- **THEN** its certificate filenames are recorded transactionally in `<output>/.sq7mru/downloads.sqlite`, leaving the group directory for certificates
+- **THEN** its certificate filenames are recorded transactionally in `<output>/<technical-directory>/downloads.sqlite`, leaving the group directory for certificates
 - **AND** JSON indexes from either previous layout are removed only after the complete validated image set has a committed database entry
 
 #### Scenario: Concurrent index updates
@@ -122,9 +122,25 @@ The store SHALL accept PDFs only for opted-in items and save them with a PDF ext
 - **THEN** the store saves a PDF and recognizes it on the next run
 - **AND** a truncated PDF or HTML response is rejected
 
+### Requirement: Configurable technical directory
+
+ArtifactStorageOptions.TechnicalDirectoryName SHALL select one shared output-root child directory for SQLite, its lock and ADIF exports. The default SHALL remain .sq7mru for compatibility. Validation SHALL reject paths, traversal, trailing spaces/dots, Windows device names and names longer than 100 characters. Desktop startup SHALL read SQ7MRU_TECHNICAL_DIRECTORY. Changing the name SHALL NOT move or delete prior data.
+
+#### Scenario: Custom shared directory
+
+- **WHEN** a safe custom technical directory name is configured
+- **THEN** multiple-account ADIF exports and EPC SQLite/lock files use that directory
+- **AND** graphical card directories remain unchanged and the default technical directory is not created
+
+#### Scenario: Unsafe configuration
+
+- **WHEN** configuration contains an unsafe name or path
+- **THEN** options validation fails before storage services are resolved
+
 ## Implementation references
 
 - [SQ7MRU.Utils/Infrastructure/ArtifactStore.cs](../../../SQ7MRU.Utils/Infrastructure/ArtifactStore.cs)
+- [SQ7MRU.Utils/Infrastructure/ArtifactStorageOptions.cs](../../../SQ7MRU.Utils/Infrastructure/ArtifactStorageOptions.cs)
 - [SQ7MRU.Utils/Infrastructure/ImageArchiveStore.cs](../../../SQ7MRU.Utils/Infrastructure/ImageArchiveStore.cs)
 - [SQ7MRU.Utils/Infrastructure/ArchiveIndex.cs](../../../SQ7MRU.Utils/Infrastructure/ArchiveIndex.cs)
 - [SQ7MRU.Utils/Infrastructure/SecureArtifactDirectory.cs](../../../SQ7MRU.Utils/Infrastructure/SecureArtifactDirectory.cs)
@@ -132,6 +148,9 @@ The store SHALL accept PDFs only for opted-in items and save them with a PDF ext
 - [SQ7MRU.Utils/Infrastructure/PdfCertificateValidator.cs](../../../SQ7MRU.Utils/Infrastructure/PdfCertificateValidator.cs)
 
 ## Verification references
+
+- `ArtifactStorageOptionsTests.RejectsUnsafeNamesBeforeResolvingStorage`
+- `ServiceIntegrationTests.EqslSeparatesAccountsAndDownloadsAdifAndImages` checks custom/default shared technical directories, ADIF separation, SQLite/lock placement and bundle resume
 
 - `ImageArchiveTests`
 - `PdfStorageTests`

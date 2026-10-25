@@ -4,6 +4,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Options;
 
 namespace SQ7MRU.Utils.Infrastructure;
 
@@ -17,18 +18,19 @@ internal sealed class EqslAccountService(IServiceHttpSessionFactory factory) : I
     }
 }
 
-internal sealed class EqslSessionFactory(IServiceHttpSessionFactory factory) : IDownloadSessionFactory
+internal sealed class EqslSessionFactory(IServiceHttpSessionFactory factory, IOptions<ArtifactStorageOptions> options) : IDownloadSessionFactory
 {
     public QslService Service => QslService.Eqsl;
     public Task<IDownloadSession> OpenAsync(ServiceCredentials credentials, IProgress<DownloadProgress>? progress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult<IDownloadSession>(new EqslSession(factory, credentials, progress));
+        return Task.FromResult<IDownloadSession>(new EqslSession(factory, credentials, progress,
+            ArtifactStorageOptions.ValidateDirectoryName(options.Value.TechnicalDirectoryName)));
     }
 }
 
 internal sealed class EqslSession(IServiceHttpSessionFactory factory, ServiceCredentials credentials,
-    IProgress<DownloadProgress>? progress) : IDownloadSession
+    IProgress<DownloadProgress>? progress, string technicalDirectoryName) : IDownloadSession
 {
     private readonly List<ServiceHttpSession> sessions = [];
     private readonly ConcurrentDictionary<string, (ServiceHttpSession Http, string Url, byte[]? Content, string? FallbackUrl)> resources = new();
@@ -54,7 +56,7 @@ internal sealed class EqslSession(IServiceHttpSessionFactory factory, ServiceCre
             var folder = ArtifactStore.SafeName(selected.CallSign + (selected.Qth.Length > 0 ? "_" + selected.Qth : ""));
             var key = Guid.NewGuid().ToString("N");
             resources.TryAdd(key, (http, "", adif, null));
-            yield return new(Path.Combine(".sq7mru", folder + ".adif"), key, true);
+            yield return new(Path.Combine(technicalDirectoryName, folder + ".adif"), key, true);
             using var reader = new AdifReader(Encoding.UTF8.GetString(adif));
             List<AdifRow> rows;
             try { rows = reader.GetAdifRows(cancellationToken); }

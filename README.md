@@ -72,7 +72,7 @@ The desktop application supports eQSL, HRDLog and EPC downloads, account selecti
 
 EPC discovers categories dynamically within the certificate accordion, including membership and contest certificates, while excluding account-management menus. Certificates are saved as validated JPEG, PNG, GIF or PDF. ZIP responses are unpacked directly into `<output>/EPC/<login>/<group>/`, without saving the archive or adding another award subdirectory.
 
-Valid existing certificates and complete bundles indexed in `<output>/.sq7mru/downloads.sqlite` are skipped. Missing or corrupt certificates are downloaded again. Progress counts selections: one ZIP selection can produce several certificate files. Completed bundles are not polled for new remote contents.
+Valid existing certificates and complete bundles indexed in `<output>/<technical-directory>/downloads.sqlite` are skipped. Missing or corrupt certificates are downloaded again. Progress counts selections: one ZIP selection can produce several certificate files. Completed bundles are not polled for new remote contents.
 
 See the [EPC download guide](docs/epc-downloads.md) for menu discovery, output layout, SQLite/JSON migration, content limits and resume behavior. Copy-ready English release text is available in [release notes](docs/release-notes.md).
 
@@ -80,7 +80,18 @@ See the [EPC download guide](docs/epc-downloads.md) for menu discovery, output l
 
 Version 2 is a breaking release. Replace `new Downloader(...).Download()`, `new iQSL(...).Download()` and `new EPC(...).Download()` with `IDownloadService.DownloadAsync`. Replace `Uploader.UploadAdif` with `IAdifUploader.UploadAsync`. Register services through `AddSq7MruUtils`; use `ServiceException.Kind` and per-file results instead of parsing log messages. Synchronous network APIs and inheritance from `HttpClient` have been removed. DMC support has been removed. ADIF parsing is case-insensitive and length-aware, supports records without a header and rejects truncated records.
 
-Downloaded eQSL ADIF logs are stored in `<output>/.sq7mru/<callsign>_<QTH>.adif`, alongside the technical SQLite index, rather than among QSL images. An empty QTH omits the suffix. Each export is refreshed; existing exports in the previous location are left untouched.
+Downloaded eQSL ADIF logs are stored in `<output>/<technical-directory>/<callsign>_<QTH>.adif`, alongside the technical SQLite index, rather than among QSL images. An empty QTH omits the suffix. Each export is refreshed; existing exports in the previous location are left untouched.
+
+## Technical directory
+
+The technical directory name is configurable; `.sq7mru` is only its default. The desktop reads `SQ7MRU_TECHNICAL_DIRECTORY` at startup; restart the application after changing it. This is a local process setting, not a GitHub Actions secret. For example, in PowerShell:
+
+```powershell
+$env:SQ7MRU_TECHNICAL_DIRECTORY = 'technical-data'
+dotnet run --project ./SQ7MRU.Downloader/
+```
+
+Library consumers configure `ArtifactStorageOptions.TechnicalDirectoryName` through DI (see the [package README](SQ7MRU.Utils/README.md#downloads-and-storage)). Use one portable directory name, not a path. SQLite, its lock and ADIF exports use this same setting. Changing the name selects a different metadata directory without moving earlier data; existing bundles may need to be downloaded again to rebuild their index.
 
 ## Publishing
 

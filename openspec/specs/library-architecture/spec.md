@@ -35,6 +35,12 @@ AddSq7MruUtils SHALL register download, account-listing and upload services thro
 - **WHEN** a consumer configures concurrency outside 1 through 32 or invalid HTTP delays
 - **THEN** options validation rejects the settings when the options are accessed
 
+#### Scenario: Shared storage configuration
+
+- **WHEN** a consumer configures ArtifactStorageOptions through DI before resolving services
+- **THEN** eQSL discovery and the artifact store use the same validated TechnicalDirectoryName for ADIF exports, SQLite and its lock
+- **AND** the library remains independent of desktop environment-variable handling
+
 ### Requirement: Public operation contracts
 
 The library SHALL expose Task-based download, eQSL account listing and ADIF upload APIs accepting CancellationToken. ServiceCredentials.ToString MUST NOT reveal credential values.
@@ -64,9 +70,12 @@ Handwritten public API declarations in Core, Application and the library SHALL c
 - [SQ7MRU.Utils.Core/Contracts.cs](../../../SQ7MRU.Utils.Core/Contracts.cs)
 - [SQ7MRU.Utils.Application/DownloadService.cs](../../../SQ7MRU.Utils.Application/DownloadService.cs)
 - [SQ7MRU.Utils/ServiceCollectionExtensions.cs](../../../SQ7MRU.Utils/ServiceCollectionExtensions.cs)
+- [SQ7MRU.Utils/Infrastructure/ArtifactStorageOptions.cs](../../../SQ7MRU.Utils/Infrastructure/ArtifactStorageOptions.cs)
 - [SQ7MRU.Utils/SQ7MRU.Utils.csproj](../../../SQ7MRU.Utils/SQ7MRU.Utils.csproj)
 
 ## Verification references
 
 - `ApplicationTests.DependencyGraphResolvesAndRejectsInvalidOptions`
+- `ArtifactStorageOptionsTests.RejectsUnsafeNamesBeforeResolvingStorage`
+- `ServiceIntegrationTests.EqslSeparatesAccountsAndDownloadsAdifAndImages`
 - `eng/verify-package.ps1`

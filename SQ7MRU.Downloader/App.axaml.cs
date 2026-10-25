@@ -2,6 +2,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using SQ7MRU.Utils;
+using SQ7MRU.Utils.Infrastructure;
 namespace SQ7MRU.Downloader;
 public partial class App : Avalonia.Application
 {
@@ -12,6 +13,8 @@ public partial class App : Avalonia.Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var services = new ServiceCollection().AddSq7MruUtils();
+            if (Environment.GetEnvironmentVariable("SQ7MRU_TECHNICAL_DIRECTORY") is { } technicalDirectory)
+                services.Configure<ArtifactStorageOptions>(options => options.TechnicalDirectoryName = technicalDirectory);
             services.AddSingleton<MainViewModel>();
             provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
             var vm = provider.GetRequiredService<MainViewModel>();

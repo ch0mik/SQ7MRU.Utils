@@ -18,8 +18,10 @@ context: |
   One confined SQLite index records completed bundles; validated existing files
   and complete bundles are skipped. Counters represent logical selections.
   Legacy JSON bundle indexes migrate after certificate validation.
-  eQSL ADIF exports are refreshed directly in the same .sq7mru technical
-  directory, using callsign/QTH filenames; images retain account directories.
+  TechnicalDirectoryName configures one shared directory for SQLite, its lock
+  and refreshed ADIF exports; .sq7mru is only the default. The desktop reads
+  SQ7MRU_TECHNICAL_DIRECTORY at startup. Require one portable directory name.
+  Changing the name does not migrate previous data. Images keep account paths.
   Preserve cancellation, cookie isolation, bounded retries, sanitized errors,
   directory-relative/no-follow storage and eQSL rate limiting.
   No real credentials, cookies, account logs or downloaded cards belong in Git.

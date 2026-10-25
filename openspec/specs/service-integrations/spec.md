@@ -37,7 +37,7 @@ The adapter SHALL export ADIF for selected accounts, preserve complete ADIF hype
 #### Scenario: Technical ADIF output
 
 - **WHEN** eQSL accounts are downloaded
-- **THEN** their refreshed ADIF exports are stored directly in `<output>/.sq7mru/<callsign>_<QTH>.adif`, beside the SQLite index, omitting the QTH suffix when empty
+- **THEN** their refreshed ADIF exports are stored directly in `<output>/<technical-directory>/<callsign>_<QTH>.adif`, beside the SQLite index, omitting the QTH suffix when empty
 - **AND** account-specific filenames keep exports separate while graphical cards remain in their account directories
 - **AND** old exports in the previous location are not automatically moved or deleted
 
