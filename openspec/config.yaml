@@ -74,6 +74,11 @@ context: |
   v* tag pushes publish NuGet only. Published release events publish desktop
   assets for the same tag; tag pushes must not trigger duplicate desktop builds.
   Preserve existing release text; replace matching assets on rerun.
+  Attest the final eight desktop packages and SHA256SUMS through GitHub OIDC
+  after checksum validation and before release upload. Attestation failure
+  blocks publication. Manual dispatch skips release attestations.
+  Document gh verification scoped to repository and signer workflow; do not
+  describe provenance attestations as Authenticode or Apple Developer ID.
   Manual desktop runs upload artifacts only and use the SDK-evaluated version.
   Do not create local release archives or DMGs as part of development.
 

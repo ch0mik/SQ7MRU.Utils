@@ -162,3 +162,18 @@ Windows ZIP and Linux TAR.GZ contain only the executable; TAR.GZ retains executa
 External sites can change forms and response formats. Tests use synthetic HTML/HTTP fixtures, not real accounts; validate authenticated flows against the services before a production release.
 
 Download `SHA256SUMS` and the desired package into the same directory. Hashes refer to the finished ZIP/TAR.GZ/DMG bytes. On Linux use `sha256sum --ignore-missing -c SHA256SUMS`. On macOS use `shasum -a 256 <package.dmg>` and compare the value with the matching manifest line; on Windows use `Get-FileHash .\<package.zip> -Algorithm SHA256`. Verify the downloaded container before extracting or opening it.
+
+## Verify release provenance
+
+Published desktop releases generate GitHub Artifact Attestations for the eight final ZIP/TAR.GZ/DMG packages and `SHA256SUMS`. Generation happens after package/hash validation and before release upload; failure blocks publication. Manual runs do not generate release attestations. No additional signing certificate or repository secret is needed: the release job uses GitHub OIDC and the attestations API.
+
+Install a current [GitHub CLI](https://cli.github.com/), authenticate with `gh auth login` if needed, and verify the downloaded package and manifest:
+
+```sh
+gh attestation verify "<package.zip>" --repo ch0mik/SQ7MRU.Utils --signer-workflow ch0mik/SQ7MRU.Utils/.github/workflows/desktop-release.yml
+gh attestation verify SHA256SUMS --repo ch0mik/SQ7MRU.Utils --signer-workflow ch0mik/SQ7MRU.Utils/.github/workflows/desktop-release.yml
+```
+
+Replace `<package.zip>` with the actual ZIP, TAR.GZ or DMG filename. For a specific release, add `--source-ref refs/tags/<release-tag>` using the tag shown on GitHub. Then check the package's SHA-256 against the verified manifest. Stop if provenance or checksum verification fails.
+
+These signed provenance statements link the downloaded bytes to the repository/workflow; they are not Windows Authenticode or Apple Developer ID signatures and do not establish SmartScreen/Gatekeeper trust. Older releases without attestations cannot be verified this way. See [GitHub attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations) and [CLI verification options](https://cli.github.com/manual/gh_attestation_verify).

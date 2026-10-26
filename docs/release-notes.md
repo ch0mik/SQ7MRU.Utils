@@ -1,5 +1,12 @@
 # Release notes
 
+## Release provenance
+
+- Generate GitHub Artifact Attestations for final desktop packages and SHA256SUMS using short-lived OIDC credentials.
+- Block release asset upload if attestation generation fails. Manual runs retain artifacts without generating release attestations.
+- Add repository/workflow-scoped GitHub CLI verification instructions to README; no paid certificate or additional secret is required.
+- Keep OS-trusted Windows/macOS code signing outside this change.
+
 ## GitHub Actions runtime
 
 - Upgrade checkout, .NET setup and artifact actions to releases declaring Node.js 24 support.

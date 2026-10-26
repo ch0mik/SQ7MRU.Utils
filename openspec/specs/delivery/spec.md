@@ -165,6 +165,23 @@ Each platform job SHALL hash its finished distribution container with SHA-256. A
 - **THEN** SHA256SUMS contains sorted SHA-256 values and package filenames, excluding itself
 - **AND** manual dispatch retains the same packages and manifest as workflow artifacts without publishing a release
 
+### Requirement: Release provenance attestations
+
+Published desktop packages and SHA256SUMS SHALL receive GitHub provenance attestations after final checksum validation and before release asset upload. Only the desktop aggregation job SHALL receive id-token:write and attestations:write permissions. Attestation failure MUST block release publication; manual dispatch SHALL NOT generate release attestations. Provenance SHALL NOT be described as OS-trusted code signing.
+
+#### Scenario: Attested release packages
+
+- **WHEN** all eight platform packages and their hashes pass validation for a published release
+- **THEN** actions/attest generates provenance for the eight distribution files and SHA256SUMS
+- **AND** release upload runs only after successful attestation
+
+#### Scenario: Manual dispatch and consumer verification
+
+- **WHEN** a manual desktop run completes
+- **THEN** packages and SHA256SUMS remain workflow artifacts without release attestations or release asset upload
+- **WHEN** a user verifies an attested release download
+- **THEN** README provides gh attestation verify commands scoped to this repository and desktop-release workflow, plus an optional expected source tag
+
 ### Requirement: Supported GitHub action runtime
 
 GitHub-provided JavaScript actions SHALL declare a supported runner runtime instead of relying on forced migration from Node.js 20. The current checkout/setup/artifact action releases SHALL target Node.js 24. Updating these actions SHALL preserve the defined trigger, permission and artifact contracts.
